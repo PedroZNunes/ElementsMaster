@@ -5,7 +5,9 @@ using UnityEngine;
 [RequireComponent (typeof(Controller2D))]
 public class Player : MonoBehaviour {
     [SerializeField]
-    float jumpHeight = 4;
+    float jumpHeightMax = 4;
+    [SerializeField]
+    float jumpHeightMin = 1;
     [SerializeField]
     float timeToJumpApex = .4f; //time to reach the apex
     [SerializeField]
@@ -20,10 +22,13 @@ public class Player : MonoBehaviour {
     float wallSlideSpeedMax = 3;
     [SerializeField]
     float wallStickTime = 0.25f;
+    [SerializeField]
+    float deactivateRaysTime = 0.2f;
 
     float wallUnstickTime;
 
-    float jumpVelocity;
+    float jumpVelocityMax;
+    float jumpVelocityMin;
     float gravity;
     float velocityXSmoothing; //smoothDamp
     Vector3 velocity;
@@ -36,9 +41,10 @@ public class Player : MonoBehaviour {
 
         CalculateGravity (ref gravity);
 
-        CalculateJumpVelocity (ref jumpVelocity);
+        CalculateJumpVelocity (ref jumpVelocityMax, ref jumpVelocityMin);
 
-        Debug.Log (string.Format ("Gravity: {0} | Jump Velocity: {1}" , gravity , jumpVelocity));
+
+        Debug.Log (string.Format ("Gravity: {0} | Jump Velocity: {1}" , gravity , jumpVelocityMax));
 	}
 	
 	void Update () {
@@ -76,31 +82,43 @@ public class Player : MonoBehaviour {
         }
 
         if (Input.GetButtonDown ("Jump")) {
-            Debug.Log ("Is it wallSliding? " + wallSliding);
-            Debug.Log ("Jump!! Is it colliding with the floor? " + controller.collisions.below);
-            if (wallSliding) {
-                if (wallDirX == input.x) {
-                    Debug.Log ("Trying to climb!");
-                    velocity.x = -wallDirX * wallJumpClimb.x;
-                    velocity.y = wallJumpClimb.y;
+            if (input.y == -1 && controller.collisions.standingOnPassThrough) {
+                //FallThrough
+                controller.DeactivateRays (deactivateRaysTime);
+            }
+            else {
+                Debug.Log ("Is it wallSliding? " + wallSliding);
+                Debug.Log ("Jump!! Is it colliding with the floor? " + controller.collisions.below);
+                if (wallSliding) {
+                    if (wallDirX == input.x) {
+                        Debug.Log ("Trying to climb!");
+                        velocity.x = -wallDirX * wallJumpClimb.x;
+                        velocity.y = wallJumpClimb.y;
+                    }
+                    else if (input.x == 0) {
+                        Debug.Log ("Jumping Off!");
+                        velocity.x = -wallDirX * wallJumpOff.x;
+                        velocity.y = wallJumpOff.y;
+                    }
+                    else {
+                        Debug.Log ("Leaping Away!");
+                        velocity.x = -wallDirX * wallLeap.x;
+                        velocity.y = wallLeap.y;
+                    }
                 }
-                else if (input.x == 0) {
-                    Debug.Log ("Jumping Off!");
-                    velocity.x = -wallDirX * wallJumpOff.x;
-                    velocity.y = wallJumpOff.y;
-                }
-                else {
-                    Debug.Log ("Leaping Away!");
-                    velocity.x = -wallDirX * wallLeap.x;
-                    velocity.y = wallLeap.y;
+                else if (controller.collisions.below) {
+                    Debug.Log ("Jump!!");
+                    velocity.y = jumpVelocityMax;
                 }
             }
-            else if (controller.collisions.below) {
-                Debug.Log ("Jump!!");
-                velocity.y = jumpVelocity;
-            }
-            
         }
+
+        if (Input.GetButtonUp ("Jump")) {
+            if (velocity.y > jumpVelocityMin) {
+                velocity.y = jumpVelocityMin;
+            }
+        }
+
         velocity.y += gravity * Time.deltaTime;
         controller.Move (velocity * Time.deltaTime);
 	}
@@ -124,13 +142,14 @@ public class Player : MonoBehaviour {
     //Solving for gravity
     //gravity = 2*jumpHeight / timeToJumpApex^2
     void CalculateGravity ( ref float gravity ) {
-        gravity = -(2 * jumpHeight) / Mathf.Pow(timeToJumpApex,2);
+        gravity = -(2 * jumpHeightMax) / Mathf.Pow(timeToJumpApex,2);
     }
 
     //V = V0 + at
     //jumpVelocity = gravity*timeToJumpApex
-    void CalculateJumpVelocity ( ref float jumpVelocity ) {
-        jumpVelocity = Mathf.Abs (gravity) * timeToJumpApex;
+    void CalculateJumpVelocity ( ref float jumpVelocityMax, ref float jumpVelocityMin ) {
+        jumpVelocityMax = Mathf.Abs (gravity) * timeToJumpApex;
+        jumpVelocityMin = Mathf.Sqrt (2 * Mathf.Abs (gravity) * jumpHeightMin);
     }
 
 }

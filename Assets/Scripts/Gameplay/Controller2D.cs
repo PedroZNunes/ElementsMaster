@@ -13,6 +13,8 @@ public class Controller2D : MonoBehaviour {
     float horizontalRaySpacing;
     float verticalRaySpacing;
 
+    bool raysDeactivated = false;
+
     BoxCollider2D collider;
     RaycastOrigins raycastOrigins;
     public CollisionInfo collisions;
@@ -24,7 +26,11 @@ public class Controller2D : MonoBehaviour {
         collisions.faceDirection = 1;
     }
 
-    public void Move ( Vector3 velocity ) {
+    public void Move (Vector3 velocity) {
+        Move (velocity , Vector2.zero);
+    }
+
+    public void Move ( Vector3 velocity , Vector2 input ) { 
         UpdateRaycastOrigins ();
         collisions.Reset ();
 
@@ -41,6 +47,15 @@ public class Controller2D : MonoBehaviour {
         transform.Translate (velocity);
     }
 
+    public void DeactivateRays (float time) {
+        raysDeactivated = true;
+        Invoke ("ResetRays" , time);
+    }
+
+    public void ResetRays () {
+        raysDeactivated = false;
+    }
+
     void VerticalCollisions ( ref Vector3 velocity ) {
         float directionY = Mathf.Sign (velocity.y);
         float rayLength = Mathf.Abs (velocity.y) + skinWidth;
@@ -52,7 +67,15 @@ public class Controller2D : MonoBehaviour {
 
             Debug.DrawRay (rayOrigin , Vector2.up * directionY * rayLength , Color.red);
 
-            if (hit) {
+            if (hit && !raysDeactivated) {
+                if (hit.collider.CompareTag (MyTags.passThrough.ToString ())) {
+                    if (directionY == 1 || hit.distance == 0) {
+                        continue;
+                    } else if (directionY == -1) {
+                        collisions.standingOnPassThrough = true;
+                    }
+                }
+
                 velocity.y = ( hit.distance - skinWidth ) * directionY;
                 rayLength = hit.distance;
 
@@ -78,6 +101,13 @@ public class Controller2D : MonoBehaviour {
             Debug.DrawRay (rayOrigin , Vector2.right * directionX * rayLength , Color.red);
 
             if (hit) {
+
+                if (hit.collider.CompareTag (MyTags.passThrough.ToString ())) {
+                    if (hit.distance == 0) {
+                        continue;
+                    }
+                }
+
                 velocity.x = ( hit.distance - skinWidth ) * directionX;
                 rayLength = hit.distance;
 
@@ -111,12 +141,14 @@ public class Controller2D : MonoBehaviour {
     }
 
     public struct CollisionInfo {
+        public bool standingOnPassThrough;
         public bool above, below;
         public bool left, right;
         public int faceDirection;
         public void Reset () {
             above = below = false;
             left = right = false;
+            standingOnPassThrough = false;
         }
 
     }
