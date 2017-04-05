@@ -46,82 +46,29 @@ public class Player : MonoBehaviour {
 
         Debug.Log (string.Format ("Gravity: {0} | Jump Velocity: {1}" , gravity , jumpVelocityMax));
 	}
-	
-	void Update () {
+
+    void Update () { //TODO: REFACTOR THE CODE DOWN BELOW IN A SEPARATE CLASS THAT HANDLES PLAYER AI. THEN ADD THIS AS COMPONENT AND GET THE COMPONENT AT AWAKE(); ALSO PUTS CLASS AS REQUIRED COMPONENT
         Vector2 input = new Vector2 (Input.GetAxisRaw ("Horizontal") , Input.GetAxisRaw ("Vertical"));
 
-        HandleAxisInput (ref velocity, input);
+        HandleAxisInput (ref velocity , input);
 
         int wallDirX = ( controller.collisions.right ) ? 1 : -1;
 
         bool wallSliding = false;
-        if (( !controller.collisions.below && (controller.collisions.left || controller.collisions.right ) && velocity.y < 0 )) {
-            wallSliding = true;
-
-            if (velocity.y < -wallSlideSpeedMax) {
-                velocity.y = -wallSlideSpeedMax;
-            }
-
-            if (wallUnstickTime > 0) {
-                velocityXSmoothing = 0;
-                velocity.x = 0;
-                if (input.x != wallDirX ) {
-                    wallUnstickTime -= Time.deltaTime;
-                }
-                else {
-                    wallUnstickTime = wallStickTime;
-                }
-            }
-            else {
-                wallUnstickTime = wallStickTime;
-            }
-        }
+        HandleWallSliding (ref wallSliding , ref input , ref wallDirX);
 
         if (controller.collisions.above || controller.collisions.below) {
             velocity.y = 0;
         }
 
-        if (Input.GetButtonDown ("Jump")) {
-            if (input.y == -1 && controller.collisions.standingOnPassThrough) {
-                //FallThrough
-                controller.DeactivateRays (deactivateRaysTime);
-            }
-            else {
-                Debug.Log ("Is it wallSliding? " + wallSliding);
-                Debug.Log ("Jump!! Is it colliding with the floor? " + controller.collisions.below);
-                if (wallSliding) {
-                    if (wallDirX == input.x) {
-                        Debug.Log ("Trying to climb!");
-                        velocity.x = -wallDirX * wallJumpClimb.x;
-                        velocity.y = wallJumpClimb.y;
-                    }
-                    else if (input.x == 0) {
-                        Debug.Log ("Jumping Off!");
-                        velocity.x = -wallDirX * wallJumpOff.x;
-                        velocity.y = wallJumpOff.y;
-                    }
-                    else {
-                        Debug.Log ("Leaping Away!");
-                        velocity.x = -wallDirX * wallLeap.x;
-                        velocity.y = wallLeap.y;
-                    }
-                }
-                else if (controller.collisions.below) {
-                    Debug.Log ("Jump!!");
-                    velocity.y = jumpVelocityMax;
-                }
-            }
-        }
 
-        if (Input.GetButtonUp ("Jump")) {
-            if (velocity.y > jumpVelocityMin) {
-                velocity.y = jumpVelocityMin;
-            }
-        }
+        HandleJump (ref wallSliding , ref input , ref wallDirX);
 
         velocity.y += gravity * Time.deltaTime;
         controller.Move (velocity * Time.deltaTime);
-	}
+    }
+    
+
 
 
     void HandleAxisInput (ref Vector3 velocity, Vector2 input) {
@@ -136,6 +83,69 @@ public class Player : MonoBehaviour {
         
     }
 
+    void HandleWallSliding (ref bool wallSliding, ref Vector2 input, ref int wallDirX) {
+        if (( !controller.collisions.below && ( controller.collisions.left || controller.collisions.right ) && velocity.y < 0 )) {
+            wallSliding = true;
+
+            if (velocity.y < -wallSlideSpeedMax) {
+                velocity.y = -wallSlideSpeedMax;
+            }
+
+            if (wallUnstickTime > 0) {
+                velocityXSmoothing = 0;
+                velocity.x = 0;
+                if (input.x != wallDirX) {
+                    wallUnstickTime -= Time.deltaTime;
+                }
+                else {
+                    wallUnstickTime = wallStickTime;
+                }
+            }
+            else {
+                wallUnstickTime = wallStickTime;
+            }
+        }
+    }
+
+    void HandleJump ( ref bool wallSliding , ref Vector2 input , ref int wallDirX ) {
+        if (Input.GetButtonDown ("Jump")) {
+            if (input.y == -1 && controller.collisions.standingOnPassThrough) {
+                //FallThrough
+                controller.DeactivateRays (deactivateRaysTime);
+            }
+            else {
+                Debug.Log ("Is it wallSliding? " + wallSliding);
+                Debug.Log ("Is it colliding with the floor? " + controller.collisions.below);
+                if (wallSliding) {
+                    if (wallDirX == input.x) {
+                        Debug.Log ("Climbing");
+                        velocity.x = -wallDirX * wallJumpClimb.x;
+                        velocity.y = wallJumpClimb.y;
+                    }
+                    else if (input.x == 0) {
+                        Debug.Log ("Jumping Off");
+                        velocity.x = -wallDirX * wallJumpOff.x;
+                        velocity.y = wallJumpOff.y;
+                    }
+                    else {
+                        Debug.Log ("Leaping Away");
+                        velocity.x = -wallDirX * wallLeap.x;
+                        velocity.y = wallLeap.y;
+                    }
+                }
+                else if (controller.collisions.below) {
+                    Debug.Log ("Jump");
+                    velocity.y = jumpVelocityMax;
+                }
+            }
+
+            if (Input.GetButtonUp ("Jump")) {
+                if (velocity.y > jumpVelocityMin) {
+                    velocity.y = jumpVelocityMin;
+                }
+            }
+        }
+    }
 
     //deltaMovement = V0 * t + (a(t^2))/2
     //jumpHeight = (gravity * timeToJumpApex^2)/2

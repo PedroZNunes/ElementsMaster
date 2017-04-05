@@ -15,13 +15,16 @@ public class Controller2D : MonoBehaviour {
 
     bool raysDeactivated = false;
 
-    BoxCollider2D collider;
+    [HideInInspector]
+    public BoxCollider2D collider;
     RaycastOrigins raycastOrigins;
     public CollisionInfo collisions;
 
+    void Awake () {
+        collider = GetComponent<BoxCollider2D> ();
+    }
 
     void Start () {
-        collider = GetComponent<BoxCollider2D> ();
         CalculateRaySpacing ();
         collisions.faceDirection = 1;
     }
