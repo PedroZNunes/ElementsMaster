@@ -4,9 +4,6 @@ using UnityEngine;
 
 public class CameraFollow : MonoBehaviour {
 
-    enum CameraState {Moving, Idle};
-    CameraState cameraState;
-
     [SerializeField]
     float verticalOffset;
     [SerializeField]
@@ -24,66 +21,51 @@ public class CameraFollow : MonoBehaviour {
     [SerializeField]
     Smooth smoothMoving;
     [SerializeField]
-    float idleSeedMin, idleSeedMax;
-    [SerializeField]
     float smoothChangingTime;
-    
+
+    bool isFocusMoving = false;
+    float currentSmoothTimeX;
+    Vector2 smoothVelocity;
     Smooth currentSmooth;
 
     void Start () {
         focusArea = new FocusArea (target.collider.bounds , focusAreaSize);
-        cameraState = CameraState.Idle;
+        currentSmoothTimeX = smoothMoving.time.x;
     }
 
 
     void LateUpdate () {
         focusArea.Update (target.collider.bounds);
-        if (Vector3.Magnitude (focusArea.velocity) == 0f && cameraState != CameraState.Idle) {
-            cameraState = CameraState.Idle;
-        }
-        else if (Vector3.Magnitude (focusArea.velocity) > 0f && cameraState != CameraState.Moving) {
-            cameraState = CameraState.Moving;
-        }
+        isFocusMoving = ( Vector3.Magnitude (focusArea.velocity) != 0 );
+
         Vector2 focusPosition = focusArea.center + Vector2.up * verticalOffset;
 
-        CalculateMovement (ref focusPosition);
+        float targetSmoothTimeX = ( isFocusMoving ) ? smoothMoving.time.x : smoothIdle.time.x;
+        lookAhead.directionX = ( isFocusMoving ) ? Mathf.Sign (focusArea.velocity.x) : lookAhead.directionX;
+
+        if (targetSmoothTimeX != currentSmoothTimeX) {
+            currentSmoothTimeX = Mathf.SmoothDamp (currentSmoothTimeX , targetSmoothTimeX , ref smoothVelocity.y , smoothChangingTime);
+        }
+        else {
+            Debug.Log ("They are the same! " + currentSmoothTimeX);
+        }
         
+        lookAhead.targetX = lookAhead.directionX * lookAhead.distanceX;
+        lookAhead.currentX = Mathf.SmoothDamp (lookAhead.currentX , lookAhead.targetX , ref smoothVelocity.x , currentSmoothTimeX);
+
+
+        focusPosition += Vector2.right * lookAhead.currentX;
         transform.position = (Vector3)focusPosition + Vector3.forward * -10;
         
     }
 
-    void HandleCameraMoving (ref Vector2 focusPosition) {
+    void HandleCameraMoving () {
         Debug.Log ("Camera Moving");
 
-        lookAhead.directionX = Mathf.Sign (focusArea.velocity.x);
-        lookAhead.targetX = lookAhead.directionX * lookAhead.distanceX;
-        lookAhead.currentX = Mathf.SmoothDamp (lookAhead.currentX , lookAhead.targetX , ref smoothMoving.smoothVelocity.x , smoothMoving.smoothTime.x);
 
-        focusPosition += Vector2.right * lookAhead.currentX;
+
+        lookAhead.currentX = Mathf.SmoothDamp (lookAhead.currentX , lookAhead.targetX , ref smoothVelocity.x , smoothMoving.time.x);
     }
-
-    void HandleCameraIdle ( ref Vector2 focusPosition ) {
-        Debug.Log ("Camera Idle");
-
-        lookAhead.currentX = Mathf.SmoothDamp (lookAhead.currentX , lookAhead.targetX , ref smoothIdle.smoothVelocity.x , smoothIdle.smoothTime.x);
-
-        focusPosition += Vector2.right * lookAhead.currentX;
-    }
-
-    void CalculateMovement (ref Vector2 focusPosition) {
-        switch (cameraState) {
-            case CameraState.Moving:
-                HandleCameraMoving (ref focusPosition);
-                break;
-            case CameraState.Idle:
-                HandleCameraIdle (ref focusPosition);
-                break;
-            default:
-                cameraState = CameraState.Idle;
-                break;
-        }
-    }
-
 
     void OnDrawGizmos () {
         Gizmos.color = new Color (0 , 1 , 1 , 0.4f);
@@ -156,8 +138,6 @@ public class CameraFollow : MonoBehaviour {
 
     [System.Serializable]
     struct Smooth {
-        [HideInInspector]
-        public Vector2 smoothVelocity;
-        public Vector2 smoothTime;
+        public Vector2 time;
     }
 }

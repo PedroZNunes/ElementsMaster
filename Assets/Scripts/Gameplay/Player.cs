@@ -138,13 +138,14 @@ public class Player : MonoBehaviour {
                     velocity.y = jumpVelocityMax;
                 }
             }
+        }
 
-            if (Input.GetButtonUp ("Jump")) {
-                if (velocity.y > jumpVelocityMin) {
-                    velocity.y = jumpVelocityMin;
-                }
+        if (Input.GetButtonUp ("Jump")) {
+            if (velocity.y > jumpVelocityMin) {
+                velocity.y = jumpVelocityMin;
             }
         }
+
     }
 
     //deltaMovement = V0 * t + (a(t^2))/2
@@ -152,7 +153,8 @@ public class Player : MonoBehaviour {
     //Solving for gravity
     //gravity = 2*jumpHeight / timeToJumpApex^2
     void CalculateGravity ( ref float gravity ) {
-        gravity = -(2 * jumpHeightMax) / Mathf.Pow(timeToJumpApex,2);
+        float halfHeight = controller.collider.size.y / 2f;
+        gravity = -(2 * (jumpHeightMax + halfHeight)) / Mathf.Pow(timeToJumpApex,2);
     }
 
     //V = V0 + at
