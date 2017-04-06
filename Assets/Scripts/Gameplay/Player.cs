@@ -4,12 +4,13 @@ using UnityEngine;
 
 [RequireComponent (typeof(Controller2D))]
 public class Player : MonoBehaviour {
+    
+
     [SerializeField]
-    float jumpHeightMax = 4;
+    Jump jump;
     [SerializeField]
-    float jumpHeightMin = 1;
-    [SerializeField]
-    float timeToJumpApex = .4f; //time to reach the apex
+    Wall wall;
+
     [SerializeField]
     float moveSpeed = 6f;
     [SerializeField]
@@ -17,22 +18,13 @@ public class Player : MonoBehaviour {
     [SerializeField]
     float accelerationTimeGrounded = 0.1f;
     [SerializeField]
-    Vector2 wallJumpClimb, wallJumpOff, wallLeap;
-    [SerializeField]
-    float wallSlideSpeedMax = 3;
-    [SerializeField]
-    float wallStickTime = 0.25f;
-    [SerializeField]
     float deactivateRaysTime = 0.2f;
 
     float wallUnstickTime;
 
-    float jumpVelocityMax;
-    float jumpVelocityMin;
     float gravity;
-    float velocityXSmoothing; //smoothDamp
+    float smoothVelocityX; //smoothDamp
     Vector3 velocity;
-
 
     Controller2D controller;
 	
@@ -41,10 +33,10 @@ public class Player : MonoBehaviour {
 
         CalculateGravity (ref gravity);
 
-        CalculateJumpVelocity (ref jumpVelocityMax, ref jumpVelocityMin);
+        CalculateJumpVelocity (ref jump.velocityMax, ref jump.velocityMin);
 
 
-        Debug.Log (string.Format ("Gravity: {0} | Jump Velocity: {1}" , gravity , jumpVelocityMax));
+        Debug.Log (string.Format ("Gravity: {0} | Jump Velocity: {1}" , gravity , jump.velocityMax));
 	}
 
     void Update () { //TODO: REFACTOR THE CODE DOWN BELOW IN A SEPARATE CLASS THAT HANDLES PLAYER AI. THEN ADD THIS AS COMPONENT AND GET THE COMPONENT AT AWAKE(); ALSO PUTS CLASS AS REQUIRED COMPONENT
@@ -75,10 +67,10 @@ public class Player : MonoBehaviour {
         
         float targetVelocityX = input.x * moveSpeed;
         if (targetVelocityX != 0) {
-            velocity.x = Mathf.SmoothDamp (velocity.x , targetVelocityX , ref velocityXSmoothing , ( controller.collisions.below ) ? accelerationTimeGrounded : accelerationTimeAirBorne);
+            velocity.x = Mathf.SmoothDamp (velocity.x , targetVelocityX , ref smoothVelocityX , ( controller.collisions.below ) ? accelerationTimeGrounded : accelerationTimeAirBorne);
         }
         else {
-            velocity.x = Mathf.SmoothDamp (velocity.x , targetVelocityX , ref velocityXSmoothing , ( controller.collisions.below ) ? accelerationTimeGrounded / 2 : accelerationTimeAirBorne / 2);
+            velocity.x = Mathf.SmoothDamp (velocity.x , targetVelocityX , ref smoothVelocityX , ( controller.collisions.below ) ? accelerationTimeGrounded / 2 : accelerationTimeAirBorne / 2);
         }
         
     }
@@ -87,22 +79,22 @@ public class Player : MonoBehaviour {
         if (( !controller.collisions.below && ( controller.collisions.left || controller.collisions.right ) && velocity.y < 0 )) {
             wallSliding = true;
 
-            if (velocity.y < -wallSlideSpeedMax) {
-                velocity.y = -wallSlideSpeedMax;
+            if (velocity.y < -wall.slideSpeedMax) {
+                velocity.y = -wall.slideSpeedMax;
             }
 
             if (wallUnstickTime > 0) {
-                velocityXSmoothing = 0;
+                smoothVelocityX = 0;
                 velocity.x = 0;
                 if (input.x != wallDirX) {
                     wallUnstickTime -= Time.deltaTime;
                 }
                 else {
-                    wallUnstickTime = wallStickTime;
+                    wallUnstickTime = wall.stickTime;
                 }
             }
             else {
-                wallUnstickTime = wallStickTime;
+                wallUnstickTime = wall.stickTime;
             }
         }
     }
@@ -119,30 +111,30 @@ public class Player : MonoBehaviour {
                 if (wallSliding) {
                     if (wallDirX == input.x) {
                         Debug.Log ("Climbing");
-                        velocity.x = -wallDirX * wallJumpClimb.x;
-                        velocity.y = wallJumpClimb.y;
+                        velocity.x = -wallDirX * wall.climb.x;
+                        velocity.y = wall.climb.y;
                     }
                     else if (input.x == 0) {
                         Debug.Log ("Jumping Off");
-                        velocity.x = -wallDirX * wallJumpOff.x;
-                        velocity.y = wallJumpOff.y;
+                        velocity.x = -wallDirX * wall.jumpOff.x;
+                        velocity.y = wall.jumpOff.y;
                     }
                     else {
                         Debug.Log ("Leaping Away");
-                        velocity.x = -wallDirX * wallLeap.x;
-                        velocity.y = wallLeap.y;
+                        velocity.x = -wallDirX * wall.leap.x;
+                        velocity.y = wall.leap.y;
                     }
                 }
                 else if (controller.collisions.below) {
                     Debug.Log ("Jump");
-                    velocity.y = jumpVelocityMax;
+                    velocity.y = jump.velocityMax;
                 }
             }
         }
 
         if (Input.GetButtonUp ("Jump")) {
-            if (velocity.y > jumpVelocityMin) {
-                velocity.y = jumpVelocityMin;
+            if (velocity.y > jump.velocityMin) {
+                velocity.y = jump.velocityMin;
             }
         }
 
@@ -154,14 +146,31 @@ public class Player : MonoBehaviour {
     //gravity = 2*jumpHeight / timeToJumpApex^2
     void CalculateGravity ( ref float gravity ) {
         float halfHeight = controller.collider.size.y / 2f;
-        gravity = -(2 * (jumpHeightMax + halfHeight)) / Mathf.Pow(timeToJumpApex,2);
+        gravity = -(2 * (jump.heightMax + halfHeight)) / Mathf.Pow(jump.timeToApex,2);
     }
 
     //V = V0 + at
     //jumpVelocity = gravity*timeToJumpApex
     void CalculateJumpVelocity ( ref float jumpVelocityMax, ref float jumpVelocityMin ) {
-        jumpVelocityMax = Mathf.Abs (gravity) * timeToJumpApex;
-        jumpVelocityMin = Mathf.Sqrt (2 * Mathf.Abs (gravity) * jumpHeightMin);
+        jumpVelocityMax = Mathf.Abs (gravity) * jump.timeToApex;
+        jumpVelocityMin = Mathf.Sqrt (2 * Mathf.Abs (gravity) * jump.heightMin);
     }
 
+    [System.Serializable]
+    struct Jump {
+        public float heightMin;
+        public float heightMax;
+        public float timeToApex;
+        [HideInInspector]
+        public float velocityMax;
+        [HideInInspector]
+        public float velocityMin;
+    }
+
+    [System.Serializable]
+    struct Wall {
+        public float stickTime;
+        public Vector2 jumpOff, leap, climb;
+        public float slideSpeedMax;
+    }
 }
