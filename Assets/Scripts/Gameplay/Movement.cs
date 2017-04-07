@@ -43,10 +43,12 @@ public class Movement : MonoBehaviour {
     void Update () {
         Vector2 input = new Vector2 (Input.GetAxisRaw ("Horizontal") , Input.GetAxisRaw ("Vertical"));
         
+        HandleMovement (ref velocity , input);
 
         int wallDirX = ( controller.collisions.right ) ? 1 : -1;
         bool wallSliding = false;
 
+        HandleWallSlide (ref wallSliding , input , wallDirX);
 
         if (controller.collisions.above || controller.collisions.below) {
             velocity.y = 0;
@@ -58,6 +60,7 @@ public class Movement : MonoBehaviour {
         controller.Move (velocity * Time.deltaTime);
     }
 
+    public void HandleMovement ( ref Vector3 velocity , Vector2 input ) {
 
         float targetVelocityX = input.x * moveSpeed;
         float accelerationTime;
@@ -72,6 +75,7 @@ public class Movement : MonoBehaviour {
         velocity.x = Mathf.SmoothDamp (velocity.x , targetVelocityX , ref smoothVelocityX , accelerationTime);
     }
 
+    public void HandleWallSlide ( ref bool wallSliding , Vector2 input , int wallDirX ) {
         if (( !controller.collisions.below && ( controller.collisions.left || controller.collisions.right ) && velocity.y < 0 )) {
             wallSliding = true;
 
@@ -121,6 +125,7 @@ public class Movement : MonoBehaviour {
                 }
                 else if (controller.collisions.below) {
                     velocity.y = jump.velocityMax;
+                    StartCoroutine (CountJumpLenght ());
                 }
             }
         }
@@ -131,6 +136,18 @@ public class Movement : MonoBehaviour {
             }
         }
 
+    }
+
+    IEnumerator CountJumpLenght () {
+        float timeCount = 0f;
+        float x1 = transform.position.x;
+        yield return null;
+        while (!controller.collisions.below) {
+            timeCount += Time.deltaTime;
+            yield return null;
+        }
+        float x2 = transform.position.x;
+        print ("Lenght: " + ( x2 - x1 ));
     }
 
     //deltaMovement = V0 * t + (a(t^2))/2
