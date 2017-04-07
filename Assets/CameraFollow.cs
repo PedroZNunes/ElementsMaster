@@ -17,20 +17,21 @@ public class CameraFollow : MonoBehaviour {
     [SerializeField]
     LookAhead lookAhead;
     [SerializeField]
-    Smooth smoothIdle;
+    Vector2 smoothTimeIdle;
     [SerializeField]
-    Smooth smoothMoving;
+    Vector2 smoothTimeMoving;
     [SerializeField]
-    float smoothChangingTime;
+    float smoothChangeTime;
+    Vector2 smoothChangeVelocity;
 
+    float smoothMaxSpeed = 3f;
     bool isFocusMoving = false;
-    float currentSmoothTimeX;
+    Vector2 currentSmoothTime;
     Vector2 smoothVelocity;
-    Smooth currentSmooth;
 
     void Start () {
         focusArea = new FocusArea (target.collider.bounds , focusAreaSize);
-        currentSmoothTimeX = smoothMoving.time.x;
+        currentSmoothTime = smoothTimeMoving;
     }
 
 
@@ -39,32 +40,23 @@ public class CameraFollow : MonoBehaviour {
         isFocusMoving = ( Vector3.Magnitude (focusArea.velocity) != 0 );
 
         Vector2 focusPosition = focusArea.center + Vector2.up * verticalOffset;
-
-        float targetSmoothTimeX = ( isFocusMoving ) ? smoothMoving.time.x : smoothIdle.time.x;
-        lookAhead.directionX = ( isFocusMoving ) ? Mathf.Sign (focusArea.velocity.x) : lookAhead.directionX;
-
-        if (targetSmoothTimeX != currentSmoothTimeX) {
-            currentSmoothTimeX = Mathf.SmoothDamp (currentSmoothTimeX , targetSmoothTimeX , ref smoothVelocity.y , smoothChangingTime);
-        }
-        else {
-            Debug.Log ("They are the same! " + currentSmoothTimeX);
-        }
+        Vector2 targetSmoothTime = ( isFocusMoving ) ? smoothTimeMoving : smoothTimeIdle;
         
-        lookAhead.targetX = lookAhead.directionX * lookAhead.distanceX;
-        lookAhead.currentX = Mathf.SmoothDamp (lookAhead.currentX , lookAhead.targetX , ref smoothVelocity.x , currentSmoothTimeX);
+        if (isFocusMoving )
+        lookAhead.directionX = ( focusArea.velocity.x != 0 ) ? Mathf.Sign (focusArea.velocity.x) : lookAhead.directionX;
 
+        if (targetSmoothTime != currentSmoothTime) {
+            currentSmoothTime = Vector2.SmoothDamp (currentSmoothTime , targetSmoothTime , ref smoothChangeVelocity , smoothChangeTime , smoothMaxSpeed , Time.deltaTime);
+        }
+
+        lookAhead.targetX = lookAhead.directionX * lookAhead.distanceX;
+        lookAhead.currentX = Mathf.SmoothDamp (lookAhead.currentX , lookAhead.targetX , ref smoothVelocity.x , currentSmoothTime.x);
+
+        focusPosition.y = Mathf.SmoothDamp (transform.position.y , focusPosition.y , ref smoothVelocity.y , currentSmoothTime.y);
 
         focusPosition += Vector2.right * lookAhead.currentX;
         transform.position = (Vector3)focusPosition + Vector3.forward * -10;
         
-    }
-
-    void HandleCameraMoving () {
-        Debug.Log ("Camera Moving");
-
-
-
-        lookAhead.currentX = Mathf.SmoothDamp (lookAhead.currentX , lookAhead.targetX , ref smoothVelocity.x , smoothMoving.time.x);
     }
 
     void OnDrawGizmos () {
@@ -136,8 +128,4 @@ public class CameraFollow : MonoBehaviour {
         Vector2 velocity;
     }
 
-    [System.Serializable]
-    struct Smooth {
-        public Vector2 time;
-    }
 }

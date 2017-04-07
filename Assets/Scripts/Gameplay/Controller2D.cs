@@ -4,17 +4,21 @@ using UnityEngine;
 
 [RequireComponent(typeof(BoxCollider2D))]
 public class Controller2D : MonoBehaviour {
-    public LayerMask collisionMask;
 
-    const float skinWidth = 0.015f;
-    public int horizontalRayCount = 4;
-    public int verticalRayCount = 4;
+    const float SKINWIDTH = 0.015f;
+
+    [SerializeField]
+    int horizontalRayCount = 4;
+    [SerializeField]
+    int verticalRayCount = 4;
 
     float horizontalRaySpacing;
     float verticalRaySpacing;
 
     bool raysDeactivated = false;
 
+    [SerializeField]
+    LayerMask collisionMask;
     [HideInInspector]
     public BoxCollider2D collider;
     RaycastOrigins raycastOrigins;
@@ -29,11 +33,7 @@ public class Controller2D : MonoBehaviour {
         collisions.faceDirection = 1;
     }
 
-    public void Move (Vector3 velocity) {
-        Move (velocity , Vector2.zero);
-    }
-
-    public void Move ( Vector3 velocity , Vector2 input ) { 
+    public void Move ( Vector3 velocity) { 
         UpdateRaycastOrigins ();
         collisions.Reset ();
 
@@ -46,7 +46,6 @@ public class Controller2D : MonoBehaviour {
         if (velocity.y != 0) {
             VerticalCollisions (ref velocity);
         }
-
         transform.Translate (velocity);
     }
 
@@ -61,7 +60,7 @@ public class Controller2D : MonoBehaviour {
 
     void VerticalCollisions ( ref Vector3 velocity ) {
         float directionY = Mathf.Sign (velocity.y);
-        float rayLength = Mathf.Abs (velocity.y) + skinWidth;
+        float rayLength = Mathf.Abs (velocity.y) + SKINWIDTH;
 
         for (int i = 0 ; i < verticalRayCount ; i++) {
             Vector2 rayOrigin = ( directionY == -1 ) ? raycastOrigins.bottomLeft : raycastOrigins.topLeft;
@@ -79,7 +78,7 @@ public class Controller2D : MonoBehaviour {
                     }
                 }
 
-                velocity.y = ( hit.distance - skinWidth ) * directionY;
+                velocity.y = ( hit.distance - SKINWIDTH ) * directionY;
                 rayLength = hit.distance;
 
                 collisions.above = ( directionY == 1 );
@@ -90,10 +89,10 @@ public class Controller2D : MonoBehaviour {
 
     void HorizontalCollisions ( ref Vector3 velocity ) {
         float directionX = collisions.faceDirection;
-        float rayLength = Mathf.Abs (velocity.x) + skinWidth;
+        float rayLength = Mathf.Abs (velocity.x) + SKINWIDTH;
 
-        if (Mathf.Abs(velocity.x) < skinWidth) {
-            rayLength = 2 * skinWidth;
+        if (Mathf.Abs(velocity.x) < SKINWIDTH) {
+            rayLength = 2 * SKINWIDTH;
         }
 
         for (int i = 0 ; i < horizontalRayCount ; i++) {
@@ -111,7 +110,7 @@ public class Controller2D : MonoBehaviour {
                     }
                 }
 
-                velocity.x = ( hit.distance - skinWidth ) * directionX;
+                velocity.x = ( hit.distance - SKINWIDTH ) * directionX;
                 rayLength = hit.distance;
 
                 collisions.right = ( directionX == 1 );
@@ -123,18 +122,17 @@ public class Controller2D : MonoBehaviour {
 
     void UpdateRaycastOrigins () {
         Bounds bounds = collider.bounds;
-        bounds.Expand (skinWidth * -2);
+        bounds.Expand (SKINWIDTH * -2);
 
         raycastOrigins.bottomLeft = new Vector2 (bounds.min.x , bounds.min.y);
         raycastOrigins.bottomRight = new Vector2 (bounds.max.x , bounds.min.y);
         raycastOrigins.topLeft  = new Vector2 (bounds.min.x , bounds.max.y);
         raycastOrigins.topRight = new Vector2 (bounds.max.x , bounds.max.y);
-
     }
 
     void CalculateRaySpacing () {
         Bounds bounds = collider.bounds;
-        bounds.Expand (skinWidth * -2);
+        bounds.Expand (SKINWIDTH * -2);
 
         horizontalRayCount = Mathf.Clamp (horizontalRayCount , 2 , int.MaxValue);
         verticalRayCount = Mathf.Clamp (verticalRayCount , 2 , int.MaxValue);
@@ -148,12 +146,12 @@ public class Controller2D : MonoBehaviour {
         public bool above, below;
         public bool left, right;
         public int faceDirection;
+
         public void Reset () {
             above = below = false;
             left = right = false;
             standingOnPassThrough = false;
         }
-
     }
 
     struct RaycastOrigins {
