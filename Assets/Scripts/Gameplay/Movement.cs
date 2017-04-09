@@ -147,7 +147,7 @@ public class Movement : MonoBehaviour {
             yield return null;
         }
         float x2 = transform.position.x;
-        print ("Lenght: " + ( x2 - x1 ));
+        print (string.Format("Jump - Length: {0:0.000} || Duration {1:0.000}", ( x2 - x1 ),timeCount));
     }
 
     //deltaMovement = V0 * t + (a(t^2))/2
