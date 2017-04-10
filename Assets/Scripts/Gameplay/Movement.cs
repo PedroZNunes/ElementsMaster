@@ -12,7 +12,8 @@ public class Movement : MonoBehaviour {
 
     [SerializeField]
     float moveSpeed;
-    
+
+    bool isWallSliding;
     float gravity;
     float smoothVelocityX;
 
@@ -28,41 +29,47 @@ public class Movement : MonoBehaviour {
     Controller2D controller;
     Vector3 velocity;
 
+    Vector2 directionalInput;
+
     void Awake () {
         controller = GetComponent<Controller2D> ();
     }
 
     void Start () { 
-        CalculateGravity (ref gravity);
+        CalculateGravity ();
 
-        CalculateJumpVelocity (ref jump.velocityMax , ref jump.velocityMin);
+        CalculateJumpVelocity ();
 
         Debug.Log (string.Format ("Gravity: {0} | Jump Velocity: {1}" , gravity , jump.velocityMax));
     }
 
+
     void Update () {
-        Vector2 input = new Vector2 (Input.GetAxisRaw ("Horizontal") , Input.GetAxisRaw ("Vertical"));
         
-        HandleMovement (ref velocity , input);
+        HandleMovement (ref velocity);
 
         int wallDirX = ( controller.collisions.right ) ? 1 : -1;
-        bool wallSliding = false;
+        isWallSliding = false;
 
-        HandleWallSlide (ref wallSliding , input , wallDirX);
+        HandleWallSlide (ref isWallSliding , wallDirX);
 
         if (controller.collisions.above || controller.collisions.below) {
             velocity.y = 0;
         }
 
-        HandleJump (wallSliding , input , wallDirX);
+        HandleJump (isWallSliding , wallDirX);
 
         velocity.y += gravity * Time.deltaTime;
         controller.Move (velocity * Time.deltaTime);
     }
 
-    public void HandleMovement ( ref Vector3 velocity , Vector2 input ) {
+    public void SetDirectionalInput(Vector2 input ) {
+        directionalInput = input;
+    }
 
-        float targetVelocityX = input.x * moveSpeed;
+    public void HandleMovement ( ref Vector3 velocity ) {
+
+        float targetVelocityX = directionalInput.x * moveSpeed;
         float accelerationTime;
 
         if (targetVelocityX != 0) {//if moving
@@ -75,7 +82,7 @@ public class Movement : MonoBehaviour {
         velocity.x = Mathf.SmoothDamp (velocity.x , targetVelocityX , ref smoothVelocityX , accelerationTime);
     }
 
-    public void HandleWallSlide ( ref bool wallSliding , Vector2 input , int wallDirX ) {
+    public void HandleWallSlide ( ref bool wallSliding , int wallDirX ) {
         if (( !controller.collisions.below && ( controller.collisions.left || controller.collisions.right ) && velocity.y < 0 )) {
             wallSliding = true;
 
@@ -86,7 +93,7 @@ public class Movement : MonoBehaviour {
             if (wallUnstickTime > 0) {
                 smoothVelocityX = 0;
                 velocity.x = 0;
-                if (input.x != wallDirX) {
+                if (directionalInput.x != wallDirX) {
                     wallUnstickTime -= Time.deltaTime;
                 }
                 else {
@@ -99,20 +106,20 @@ public class Movement : MonoBehaviour {
         }
     }
 
-    void HandleJump ( bool wallSliding , Vector2 input , int wallDirX ) {
+    void HandleJump ( bool wallSliding , int wallDirX ) {
         if (Input.GetButtonDown ("Jump")) {
-            if (input.y == -1 && controller.collisions.standingOnPassThrough) {
+            if (directionalInput.y == -1 && controller.collisions.standingOnPassThrough) {
                 //FallThrough
                 controller.DeactivateRays (deactivateRaysTime);
             }
             else {
                 if (wallSliding) {
-                    if (wallDirX == input.x) {
+                    if (wallDirX == directionalInput.x) {
                         Debug.Log ("Climbing");
                         velocity.x = -wallDirX * wall.climb.x;
                         velocity.y = wall.climb.y;
                     }
-                    else if (input.x == 0) {
+                    else if (directionalInput.x == 0) {
                         Debug.Log ("Jumping Off");
                         velocity.x = -wallDirX * wall.jumpOff.x;
                         velocity.y = wall.jumpOff.y;
@@ -154,16 +161,16 @@ public class Movement : MonoBehaviour {
     //jumpHeight = (gravity * timeToJumpApex^2)/2
     //Solving for gravity
     //gravity = 2*jumpHeight / timeToJumpApex^2
-    void CalculateGravity ( ref float gravity ) {
+    void CalculateGravity () {
         float halfHeight = controller.collider.size.y / 2f;
         gravity = -( 2 * ( jump.heightMax + halfHeight ) ) / Mathf.Pow (jump.timeToApex , 2);
     }
 
     //V = V0 + at
     //jumpVelocity = gravity*timeToJumpApex
-    void CalculateJumpVelocity ( ref float jumpVelocityMax , ref float jumpVelocityMin ) {
-        jumpVelocityMax = Mathf.Abs (gravity) * jump.timeToApex;
-        jumpVelocityMin = Mathf.Sqrt (2 * Mathf.Abs (gravity) * jump.heightMin);
+    void CalculateJumpVelocity () {
+        jump.velocityMax = Mathf.Abs (gravity) * jump.timeToApex;
+        jump.velocityMin = Mathf.Sqrt (2 * Mathf.Abs (gravity) * jump.heightMin);
     }
 
     [System.Serializable]

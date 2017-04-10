@@ -1,9 +1,18 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
+
+public class OnCollisionEventArgs : EventArgs {
+    public GameObject source;
+    public GameObject target;
+}
+
 
 [RequireComponent(typeof(BoxCollider2D))]
 public class Controller2D : MonoBehaviour {
+
+    public event EventHandler<OnCollisionEventArgs> OnCollision;
 
     const float SKINWIDTH = 0.015f;
 
@@ -54,7 +63,7 @@ public class Controller2D : MonoBehaviour {
         Invoke ("ResetRays" , time);
     }
 
-    public void ResetRays () {
+    void ResetRays () {
         raysDeactivated = false;
     }
 
@@ -70,12 +79,11 @@ public class Controller2D : MonoBehaviour {
             Debug.DrawRay (rayOrigin , Vector2.up * directionY * rayLength , Color.red);
 
             if (hit && !raysDeactivated) {
-                if (hit.collider.CompareTag (MyTags.passThrough.ToString ())) {
-                    if (directionY == 1 || hit.distance == 0) {
-                        continue;
-                    } else if (directionY == -1) {
-                        collisions.standingOnPassThrough = true;
-                    }
+                hit.collider.gameObject.SendMessage ("OnCollision" , gameObject , SendMessageOptions.DontRequireReceiver);
+
+                bool pass = HandleVerticalCollisions (hit , directionY);
+                if (!pass) {
+                    continue;
                 }
 
                 velocity.y = ( hit.distance - SKINWIDTH ) * directionY;
@@ -102,12 +110,12 @@ public class Controller2D : MonoBehaviour {
 
             Debug.DrawRay (rayOrigin , Vector2.right * directionX * rayLength , Color.red);
 
-            if (hit) {
+            if (hit && !raysDeactivated) {
+                hit.collider.gameObject.SendMessage ("OnCollision" , gameObject , SendMessageOptions.DontRequireReceiver);
 
-                if (hit.collider.CompareTag (MyTags.passThrough.ToString ())) {
-                    if (hit.distance == 0) {
-                        continue;
-                    }
+                bool pass = HandleHorizontalCollisions (hit);
+                if (!pass) {
+                    continue;
                 }
 
                 velocity.x = ( hit.distance - SKINWIDTH ) * directionX;
@@ -139,6 +147,35 @@ public class Controller2D : MonoBehaviour {
 
         horizontalRaySpacing = bounds.size.y / ( horizontalRayCount - 1 );
         verticalRaySpacing = bounds.size.x / ( verticalRayCount - 1 );
+    }
+
+    bool HandleHorizontalCollisions (RaycastHit2D hit) {
+        if (hit.collider.isTrigger) {
+            return false;
+        }
+        if (hit.collider.CompareTag (MyTags.passThrough.ToString ())) {
+            if (hit.distance == 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool HandleVerticalCollisions (RaycastHit2D hit, float directionY ) {
+        if (hit.collider.isTrigger) {
+            return false;
+        }
+
+        if (hit.collider.CompareTag (MyTags.passThrough.ToString ())) {
+            if (directionY == 1 || hit.distance == 0) {
+                return false;
+            }
+            else if (directionY == -1) {
+                collisions.standingOnPassThrough = true;
+            }
+        }
+
+        return true;
     }
 
     public struct CollisionInfo {

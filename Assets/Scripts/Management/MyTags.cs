@@ -7,4 +7,5 @@
 	public static string player = "Player";
 	public static string gameController = "GameController";
     public static string passThrough = "Pass-Through Platform";
+    public static string objective = "Objective";
 }

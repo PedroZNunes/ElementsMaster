@@ -10,9 +10,9 @@ public class Player : MonoBehaviour {
 
     Controller2D controller;
 
-	void Awake () {
+    void Awake () {
         controller = GetComponent<Controller2D> ();
         movement = GetComponent<Movement> ();
-	}
+    }
 
 }
