@@ -9,14 +9,27 @@ public class ObjectiveTriggeredEventArgs : EventArgs {
 
 public class Objective : MonoBehaviour {
 
+    [SerializeField]
+    Color notTriggeredColor, triggeredColor;
+    
     public static event EventHandler<ObjectiveTriggeredEventArgs> ObjectiveTriggered;
 
     public bool isEnabled = false;
-    public bool isTriggered = false;
+
+    bool isTriggered = false;
+    public bool IsTriggered {
+        get {
+            return isTriggered;
+        }
+        set {
+            isTriggered = value;
+            ChangeMaterialColor ();
+        }
+    }
 
     public void Reset () {
         isEnabled = true;
-        isTriggered = false;
+        IsTriggered = false;
     }
 
     public void OnCollision ( GameObject source ) {
@@ -32,11 +45,23 @@ public class Objective : MonoBehaviour {
             ObjectiveTriggeredEventArgs e = new ObjectiveTriggeredEventArgs () { objectiveTriggered = gameObject };
             ObjectiveTriggered (this , e);
         }
+
         Collider2D col = GetComponent<Collider2D> ();
         col.enabled = isEnabled = false;
-        isTriggered = true;
+        IsTriggered = true;
 
         Debug.Log ("Player triggered the " + name);
     }
 
+    void ChangeMaterialColor () {
+        Renderer rend = GetComponent<Renderer> ();
+        if (rend != null) {
+            if (isTriggered) {
+                rend.material.color = triggeredColor;
+            }
+            else {
+                rend.material.color = notTriggeredColor;
+            }
+        }
+    }
 }

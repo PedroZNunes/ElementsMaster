@@ -11,10 +11,22 @@ public class PlayerInput : MonoBehaviour {
         player = GetComponent<Player> ();
 	}
 	
-	void Update () { //TODO proceed with refactor.
-        Vector2 directionalInput = new Vector2 (Input.GetAxisRaw ("Horizontal") , Input.GetAxisRaw ("Vertical"));
+	void Update () {
         if (player.movement != null) {
+            Vector2 directionalInput = new Vector2 (Input.GetAxisRaw ("Horizontal") , Input.GetAxisRaw ("Vertical"));
             player.movement.SetDirectionalInput (directionalInput);
+
+            if (Input.GetButtonDown ("Jump")) {
+                player.movement.HandleJump ();
+            }
+
+            if (Input.GetButtonUp ("Jump")) {
+                player.movement.HandleCancelJump ();
+            }
+
+
         }
+
+        
     }
 }

@@ -10,13 +10,13 @@ public class Movement : MonoBehaviour {
     [SerializeField]
     Wall wall;
 
-    [SerializeField]
-    float moveSpeed;
-
     bool isWallSliding;
+    int wallDirX;
     float gravity;
     float smoothVelocityX;
 
+    [SerializeField]
+    float moveSpeed;
     [SerializeField]
     float accelerationTimeAirBorne = 0.4f;
     [SerializeField]
@@ -45,29 +45,27 @@ public class Movement : MonoBehaviour {
 
 
     void Update () {
-        
-        HandleMovement (ref velocity);
-
-        int wallDirX = ( controller.collisions.right ) ? 1 : -1;
         isWallSliding = false;
+        wallDirX = ( controller.collisions.right ) ? 1 : -1;
 
-        HandleWallSlide (ref isWallSliding , wallDirX);
+        HandleMovement ();
+
+        HandleWallSlide ();
+
+        velocity.y += gravity * Time.deltaTime;
+        controller.Move (velocity * Time.deltaTime);
 
         if (controller.collisions.above || controller.collisions.below) {
             velocity.y = 0;
         }
 
-        HandleJump (isWallSliding , wallDirX);
-
-        velocity.y += gravity * Time.deltaTime;
-        controller.Move (velocity * Time.deltaTime);
     }
 
     public void SetDirectionalInput(Vector2 input ) {
         directionalInput = input;
     }
 
-    public void HandleMovement ( ref Vector3 velocity ) {
+    public void HandleMovement () {
 
         float targetVelocityX = directionalInput.x * moveSpeed;
         float accelerationTime;
@@ -82,9 +80,9 @@ public class Movement : MonoBehaviour {
         velocity.x = Mathf.SmoothDamp (velocity.x , targetVelocityX , ref smoothVelocityX , accelerationTime);
     }
 
-    public void HandleWallSlide ( ref bool wallSliding , int wallDirX ) {
+    public void HandleWallSlide () {
         if (( !controller.collisions.below && ( controller.collisions.left || controller.collisions.right ) && velocity.y < 0 )) {
-            wallSliding = true;
+            isWallSliding = true;
 
             if (velocity.y < -wall.slideSpeedMax) {
                 velocity.y = -wall.slideSpeedMax;
@@ -106,48 +104,50 @@ public class Movement : MonoBehaviour {
         }
     }
 
-    void HandleJump ( bool wallSliding , int wallDirX ) {
-        if (Input.GetButtonDown ("Jump")) {
-            if (directionalInput.y == -1 && controller.collisions.standingOnPassThrough) {
-                //FallThrough
-                controller.DeactivateRays (deactivateRaysTime);
-            }
-            else {
-                if (wallSliding) {
-                    if (wallDirX == directionalInput.x) {
-                        Debug.Log ("Climbing");
-                        velocity.x = -wallDirX * wall.climb.x;
-                        velocity.y = wall.climb.y;
-                    }
-                    else if (directionalInput.x == 0) {
-                        Debug.Log ("Jumping Off");
-                        velocity.x = -wallDirX * wall.jumpOff.x;
-                        velocity.y = wall.jumpOff.y;
-                    }
-                    else {
-                        Debug.Log ("Leaping Away");
-                        velocity.x = -wallDirX * wall.leap.x;
-                        velocity.y = wall.leap.y;
-                    }
-                }
-                else if (controller.collisions.below) {
-                    velocity.y = jump.velocityMax;
-                    StartCoroutine (CountJumpLenght ());
-                }
-            }
+    public void HandleJump () {
+        if (directionalInput.y == -1 && controller.collisions.standingOnPassThrough) {
+            HandleFallThrough ();
         }
-
-        if (Input.GetButtonUp ("Jump")) {
-            if (velocity.y > jump.velocityMin) {
-                velocity.y = jump.velocityMin;
+        else {
+            if (isWallSliding) {
+                if (wallDirX == directionalInput.x) {
+                    Debug.Log ("Climbing");
+                    velocity.x = -wallDirX * wall.climb.x;
+                    velocity.y = wall.climb.y;
+                }
+                else if (directionalInput.x == 0) {
+                    Debug.Log ("Jumping Off");
+                    velocity.x = -wallDirX * wall.jumpOff.x;
+                    velocity.y = wall.jumpOff.y;
+                }
+                else {
+                    Debug.Log ("Leaping Away");
+                    velocity.x = -wallDirX * wall.leap.x;
+                    velocity.y = wall.leap.y;
+                }
+            }
+            else if (controller.collisions.below) {
+                velocity.y = jump.velocityMax;
+                StartCoroutine (CountJumpLength ());
             }
         }
 
     }
 
-    IEnumerator CountJumpLenght () {
+    public void HandleCancelJump () {
+        if (velocity.y > jump.velocityMin) {
+            velocity.y = jump.velocityMin;
+        }
+    }
+
+    public void HandleFallThrough () {
+        controller.DeactivateRays (deactivateRaysTime);
+    }
+
+    IEnumerator CountJumpLength () {
         float timeCount = 0f;
         float x1 = transform.position.x;
+        timeCount += Time.deltaTime;
         yield return null;
         while (!controller.collisions.below) {
             timeCount += Time.deltaTime;

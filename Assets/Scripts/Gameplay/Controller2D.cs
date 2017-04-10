@@ -15,11 +15,10 @@ public class Controller2D : MonoBehaviour {
     public event EventHandler<OnCollisionEventArgs> OnCollision;
 
     const float SKINWIDTH = 0.015f;
+    const float distanceBetweenRays = 0.25f;
 
-    [SerializeField]
-    int horizontalRayCount = 4;
-    [SerializeField]
-    int verticalRayCount = 4;
+    int horizontalRayCount;
+    int verticalRayCount;
 
     float horizontalRaySpacing;
     float verticalRaySpacing;
@@ -42,20 +41,20 @@ public class Controller2D : MonoBehaviour {
         collisions.faceDirection = 1;
     }
 
-    public void Move ( Vector3 velocity) { 
+    public void Move ( Vector2 moveAmount) { 
         UpdateRaycastOrigins ();
         collisions.Reset ();
 
-        if (velocity.x != 0) {
-            collisions.faceDirection = (int) Mathf.Sign (velocity.x);
+        if (moveAmount.x != 0) {
+            collisions.faceDirection = (int) Mathf.Sign (moveAmount.x);
         }
         
-        HorizontalCollisions (ref velocity);
+        HorizontalCollisions (ref moveAmount);
         
-        if (velocity.y != 0) {
-            VerticalCollisions (ref velocity);
+        if (moveAmount.y != 0) {
+            VerticalCollisions (ref moveAmount);
         }
-        transform.Translate (velocity);
+        transform.Translate (moveAmount);
     }
 
     public void DeactivateRays (float time) {
@@ -67,16 +66,16 @@ public class Controller2D : MonoBehaviour {
         raysDeactivated = false;
     }
 
-    void VerticalCollisions ( ref Vector3 velocity ) {
-        float directionY = Mathf.Sign (velocity.y);
-        float rayLength = Mathf.Abs (velocity.y) + SKINWIDTH;
+    void VerticalCollisions ( ref Vector2 moveAmount ) {
+        float directionY = Mathf.Sign (moveAmount.y);
+        float rayLength = Mathf.Abs (moveAmount.y) + SKINWIDTH;
 
         for (int i = 0 ; i < verticalRayCount ; i++) {
             Vector2 rayOrigin = ( directionY == -1 ) ? raycastOrigins.bottomLeft : raycastOrigins.topLeft;
-            rayOrigin += Vector2.right * ( verticalRaySpacing * i + velocity.x );
+            rayOrigin += Vector2.right * ( verticalRaySpacing * i + moveAmount.x );
             RaycastHit2D hit = Physics2D.Raycast (rayOrigin , Vector2.up * directionY , rayLength , collisionMask);
 
-            Debug.DrawRay (rayOrigin , Vector2.up * directionY * rayLength , Color.red);
+            Debug.DrawRay (rayOrigin , Vector2.up * directionY , Color.red);
 
             if (hit && !raysDeactivated) {
                 hit.collider.gameObject.SendMessage ("OnCollision" , gameObject , SendMessageOptions.DontRequireReceiver);
@@ -86,7 +85,7 @@ public class Controller2D : MonoBehaviour {
                     continue;
                 }
 
-                velocity.y = ( hit.distance - SKINWIDTH ) * directionY;
+                moveAmount.y = ( hit.distance - SKINWIDTH ) * directionY;
                 rayLength = hit.distance;
 
                 collisions.above = ( directionY == 1 );
@@ -95,11 +94,11 @@ public class Controller2D : MonoBehaviour {
         }
     }
 
-    void HorizontalCollisions ( ref Vector3 velocity ) {
+    void HorizontalCollisions ( ref Vector2 moveAmount ) {
         float directionX = collisions.faceDirection;
-        float rayLength = Mathf.Abs (velocity.x) + SKINWIDTH;
+        float rayLength = Mathf.Abs (moveAmount.x) + SKINWIDTH;
 
-        if (Mathf.Abs(velocity.x) < SKINWIDTH) {
+        if (Mathf.Abs(moveAmount.x) < SKINWIDTH) {
             rayLength = 2 * SKINWIDTH;
         }
 
@@ -108,7 +107,7 @@ public class Controller2D : MonoBehaviour {
             rayOrigin += Vector2.up * ( horizontalRaySpacing * i );
             RaycastHit2D hit = Physics2D.Raycast (rayOrigin , Vector2.right * directionX , rayLength , collisionMask);
 
-            Debug.DrawRay (rayOrigin , Vector2.right * directionX * rayLength , Color.red);
+            Debug.DrawRay (rayOrigin , Vector2.right * directionX , Color.red);
 
             if (hit && !raysDeactivated) {
                 hit.collider.gameObject.SendMessage ("OnCollision" , gameObject , SendMessageOptions.DontRequireReceiver);
@@ -118,7 +117,7 @@ public class Controller2D : MonoBehaviour {
                     continue;
                 }
 
-                velocity.x = ( hit.distance - SKINWIDTH ) * directionX;
+                moveAmount.x = ( hit.distance - SKINWIDTH ) * directionX;
                 rayLength = hit.distance;
 
                 collisions.right = ( directionX == 1 );
@@ -142,11 +141,17 @@ public class Controller2D : MonoBehaviour {
         Bounds bounds = collider.bounds;
         bounds.Expand (SKINWIDTH * -2);
 
+        float boundsWidth = bounds.size.x;
+        float boundsHeight = bounds.size.y;
+        //set the n of rays base off the  maxdistance between them
+        horizontalRayCount = Mathf.RoundToInt (boundsHeight / distanceBetweenRays);
+        verticalRayCount = Mathf.RoundToInt (boundsWidth / distanceBetweenRays);
+        //clamps so there are never less than 2 rays
         horizontalRayCount = Mathf.Clamp (horizontalRayCount , 2 , int.MaxValue);
         verticalRayCount = Mathf.Clamp (verticalRayCount , 2 , int.MaxValue);
-
-        horizontalRaySpacing = bounds.size.y / ( horizontalRayCount - 1 );
-        verticalRaySpacing = bounds.size.x / ( verticalRayCount - 1 );
+        //defines the final spacing
+        horizontalRaySpacing = boundsHeight / ( horizontalRayCount - 1 );
+        verticalRaySpacing = boundsWidth / ( verticalRayCount - 1 );
     }
 
     bool HandleHorizontalCollisions (RaycastHit2D hit) {
