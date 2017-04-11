@@ -5,12 +5,15 @@ using UnityEngine;
 public class GameManager : MonoBehaviour {
 
     public enum States { Pause, Opening, Play, Win, Lose, Inactive }
-    public States currentState { get; private set; }
+    static public States currentState { get; private set; }
 
     List<Objective> objectives = new List<Objective>();
 	
+    static public bool isPaused { get; private set; }
+
     void Awake () {
-        Objective.ObjectiveTriggered += OnObjectiveTriggered;
+        Objective.Triggered += OnObjectiveTriggered;
+        PlayerInput.OnPressPause += Pause;
     }
 
     void Start () {
@@ -43,12 +46,14 @@ public class GameManager : MonoBehaviour {
             case States.Opening:
                 break;
             case States.Play:
+
                 break;
             case States.Win:
                 break;
             case States.Lose:
                 break;
             case States.Inactive:
+                
                 break;
             default:
                 Trigger (States.Inactive);
@@ -94,4 +99,16 @@ public class GameManager : MonoBehaviour {
             }
         }
     }
+
+    static public void Pause () {
+        if (!isPaused) {
+            isPaused = true;
+            Time.timeScale = 0f;
+        }
+        else if (isPaused) {
+            isPaused = false;
+            Time.timeScale = 1f;
+        }
+    }
+
 }

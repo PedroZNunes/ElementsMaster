@@ -23,7 +23,7 @@ public class Movement : MonoBehaviour {
     float accelerationTimeGrounded = 0.1f;
 
     [SerializeField]
-    float deactivateRaysTime = 0.2f;
+    float rayDeactivateTime = 0.2f;
 
     float wallUnstickTime;
     Controller2D controller;
@@ -141,7 +141,7 @@ public class Movement : MonoBehaviour {
     }
 
     public void HandleFallThrough () {
-        controller.DeactivateRays (deactivateRaysTime);
+        controller.DeactivateRays (rayDeactivateTime);
     }
 
     IEnumerator CountJumpLength () {

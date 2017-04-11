@@ -12,7 +12,7 @@ public class Objective : MonoBehaviour {
     [SerializeField]
     Color notTriggeredColor, triggeredColor;
     
-    public static event EventHandler<ObjectiveTriggeredEventArgs> ObjectiveTriggered;
+    public static event EventHandler<ObjectiveTriggeredEventArgs> Triggered;
 
     public bool isEnabled = false;
 
@@ -41,9 +41,9 @@ public class Objective : MonoBehaviour {
     }
     
     void Trigger () {
-        if (ObjectiveTriggered != null) {
+        if (Triggered != null) {
             ObjectiveTriggeredEventArgs e = new ObjectiveTriggeredEventArgs () { objectiveTriggered = gameObject };
-            ObjectiveTriggered (this , e);
+            Triggered (this , e);
         }
 
         Collider2D col = GetComponent<Collider2D> ();
