@@ -2,10 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
+
 public class GameManager : MonoBehaviour {
 
     public enum States { Pause, Opening, Play, Win, Lose, Inactive }
     static public States currentState { get; private set; }
+    public delegate void OnPauseHandler ( bool isPaused );
+    static public event OnPauseHandler OnPause; //to be used by UI
 
     List<Objective> objectives = new List<Objective>();
 	
@@ -46,7 +50,6 @@ public class GameManager : MonoBehaviour {
             case States.Opening:
                 break;
             case States.Play:
-
                 break;
             case States.Win:
                 break;
@@ -109,6 +112,14 @@ public class GameManager : MonoBehaviour {
             isPaused = false;
             Time.timeScale = 1f;
         }
+        FireOnPauseEvent ();
+    }
+
+    static void FireOnPauseEvent () {
+        if (OnPause != null) {
+            OnPause (isPaused);
+        }
+
     }
 
 }

@@ -58,7 +58,6 @@ public class Movement : MonoBehaviour {
         if (controller.collisions.above || controller.collisions.below) {
             velocity.y = 0;
         }
-
     }
 
     public void SetDirectionalInput(Vector2 input ) {
@@ -66,7 +65,6 @@ public class Movement : MonoBehaviour {
     }
 
     public void HandleMovement () {
-
         float targetVelocityX = directionalInput.x * moveSpeed;
         float accelerationTime;
 
