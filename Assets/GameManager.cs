@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-
-
 public class GameManager : MonoBehaviour {
 
     public enum States { Pause, Opening, Play, Win, Lose, Inactive }
@@ -56,7 +54,6 @@ public class GameManager : MonoBehaviour {
             case States.Lose:
                 break;
             case States.Inactive:
-                
                 break;
             default:
                 Trigger (States.Inactive);
@@ -76,6 +73,7 @@ public class GameManager : MonoBehaviour {
     void Trigger (States stateToTrigger ) {
         if (stateToTrigger != currentState) {
             currentState = stateToTrigger;
+
             switch (stateToTrigger) {
                 case States.Pause:
                     Debug.Log ("Triggered Pause");
@@ -119,7 +117,6 @@ public class GameManager : MonoBehaviour {
         if (OnPause != null) {
             OnPause (isPaused);
         }
-
     }
 
 }
