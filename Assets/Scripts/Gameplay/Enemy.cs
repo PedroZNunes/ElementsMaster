@@ -10,6 +10,8 @@ public class Enemy : Actor {
 
     Controller2D controller;
     EnemyAI ai;
+    
+    public int difficulty;
 
     void Awake () {
         ai = GetComponent<EnemyAI> ();

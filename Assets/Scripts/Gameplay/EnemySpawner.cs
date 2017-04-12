@@ -9,7 +9,8 @@ public class EnemySpawner : MonoBehaviour {
     [SerializeField]
     List<GameObject> enemyPrefabs = new List<GameObject> ();
     [SerializeField]
-    float spawnIntervalBase;
+    float spawnIntervalBase;    //the interval should be based on the difficulty per second that the game gets.
+                                //allowing for faster spawns later. It should not spawn always at the same interval, though.
     [SerializeField]
     string holderName = "Enemies";
     Transform enemyHolder;
@@ -43,12 +44,26 @@ public class EnemySpawner : MonoBehaviour {
 
     GameObject SelectEnemyToSpawn () {
         //Count how many enemies are on the screen
-        //loop the enemies at random
+        Enemy[] enemy = FindObjectsOfType<Enemy> ();
+        for (int i = 0 ; i < enemy.Length; i++) {
+            if (enemy[i].gameObject.CompareTag (MyTags.LesserCreep.ToString ())){
+                //count the amount of lesser creeps
+            } else if (enemy[i].gameObject.CompareTag (MyTags.MediumCreep.ToString ())) {
+                //count the amount of medium creeps
+                //ps. this could be done in a dictionary<Enemy, EnemyCount>. fill up the dictionary every frame
+            }
+            //TODO: sum up the difficultys in a variable
+        }
+        
+        
+        //loop the enemies at random until there are no enemies to test
         //if (currentDifficulty + enemyDifficulty <= maxDifficulty)
         //return the prefab
         //else if (currentDifficulty + enemyDifficulty < minDifficulty)
-        //pick something stronger or decrease the delay
-        return new GameObject();
+        //loop next
+
+
+        return null;    //if there are no enemies to spawn, return nothing;
     }
 
     void Spawn () {
@@ -59,6 +74,10 @@ public class EnemySpawner : MonoBehaviour {
         if (n == 0) { return; }
         //estimate which enemy should spawn
         GameObject toInstantiate = SelectEnemyToSpawn ();
+        if (toInstantiate == null) {
+            Debug.Log ("Not enough difficulty to spawn an enemy. Spawn aborted.");
+            return;
+        }
         //choose a platform. this should be closer than the end of the screen + offset
         Vector2 pos = PickPlatform ();
         //spawn enemy under the holder;
