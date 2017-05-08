@@ -10,18 +10,41 @@ public class PlayerAI : MonoBehaviour {
     int jumpsRequired;
     int wallJumpsRequired;
     float runDuration;
-    //include here a bunch of statistics that the map generator should look at in order to determine wether it is a good map or not.
+    //include here a bunch of statistics that the map generator should look at in order to determine whether it is a good map or not.
     
-
-	// Use this for initialization
 	void Start () {
-		//assemble list of objectives
+		//Vector3[] ObjectivePositions = FindObjectsWithTag(MyTags.Objectives.ToString());
+        //State[] goalStates;
+        //for(state state in goalstates)
+        //  goalStates[i].pos = objectivepositions[i]
+        //Set Initial State
+        //  initialState = new State (initial parameters)
 	}
 	
-	// Update is called once per frame
+	
 	void Update () {
 		//loop through list of objectives trying to get to all of them in some sequence. 
+        //while (i < goalstates.length)
+        //random i
+        //
         //the pathing should be available from any objective to any other objective.
         //if succeed, returns true; if not, false;
 	}
+
+    ///bool TryPath(Subgrid subgrid ){
+    ///
+    ///}
+
+
+}
+
+struct State {
+    //bunch of bools to define each state
+    bool isGrounded;
+    bool isJumping;
+    Vector2 pos;
+
+    //public State (initial state parameters)
+    //initialize all parameters
+    //set all else to 0 or false
 }
