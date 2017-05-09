@@ -11,4 +11,5 @@
     public static string playerRespawn = "PlayerRespawn";
     public static string LesserCreep = "LesserCreep"; //TEMP change according to new enemies
     public static string MediumCreep = "MediumCreep"; //TEMP change according to new enemies
+    public static string SpellHolder = "SpellHolder";
 }

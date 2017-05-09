@@ -28,6 +28,7 @@ public class PlayerInput : MonoBehaviour {
             case GameManager.States.Play:
                 CheckPause ();
                 CheckMovement ();
+                CheckActions ();
                 break;
             case GameManager.States.Win:
                 CheckMovement ();
@@ -63,5 +64,23 @@ public class PlayerInput : MonoBehaviour {
             }
         }
     }
+
+    void CheckActions () {
+        if (Input.GetButtonDown ("Fire1")){
+            if (Fire1Event != null) {
+                Fire1Event ();
+            }
+        } else if (Input.GetButtonDown ("Fire2")) {
+            if (Fire2Event != null) {
+                Fire2Event ();
+            }
+        } else if (Input.GetButtonDown ("Fire3")) {
+            if (Fire1Event != null) {
+                Fire1Event ();
+            }
+        }
+    }
+
+
 
 }

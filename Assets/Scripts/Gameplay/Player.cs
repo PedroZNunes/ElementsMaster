@@ -11,6 +11,8 @@ public class Player : Actor {
     [SerializeField]
     static Transform playerHolder;
 
+    public Vector3 castPoint { get; private set; }
+
     [HideInInspector]
     public Movement movement;
 
@@ -18,6 +20,7 @@ public class Player : Actor {
 
     static Vector3 spawnPosition;
     static Vector3 currentPosition;
+
 
     //Singleton Instance
     public static Player Instance {
@@ -33,6 +36,7 @@ public class Player : Actor {
     void Awake () {
         controller = GetComponent<Controller2D> ();
         movement = GetComponent<Movement> ();
+        castPoint = transform.FindChild ("Cast Point").transform.position;
     }
 
     public static void Spawn () {
@@ -41,7 +45,7 @@ public class Player : Actor {
 
         if (instance == null && FindObjectOfType<Player> () == null) {
             Debug.Log ("Spawning Player");
-           GameObject playerGO =  Instantiate (playerPrefab , spawnPosition , Quaternion.identity , playerHolder);
+            GameObject playerGO =  Instantiate (playerPrefab , spawnPosition , Quaternion.identity , playerHolder);
             if (instance == null) {
                 instance = playerGO.GetComponent<Player> ();
             }
