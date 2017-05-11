@@ -12,7 +12,7 @@ public class Fireball : Spell {
     Transform holder;
 
 	void Awake () {
-        holder = GameObject.FindWithTag (MyTags.ProjectileHolder.ToString ()).transform;
+        holder = GameObject.FindWithTag (MyTags.projectileHolder.ToString ()).transform;
     }
 
 	void Update () {
@@ -21,7 +21,7 @@ public class Fireball : Spell {
         }
 	}
 
-    public override void Cast ( int dirX , float speed , float size , Vector2 castPoint , GameObject owner ) {
+    public override void Cast ( short dirX , float speed , float size , Vector2 castPoint , GameObject owner ) {
         if (cooldown > 0) {
             Debug.LogFormat ("Spell on cooldown. {0:0.0}s", cooldown);
             return;

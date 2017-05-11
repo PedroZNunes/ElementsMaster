@@ -4,18 +4,21 @@ using UnityEngine;
 
 public class Firemage : Mastery {
     
-    Controller2D controller;
     [SerializeField]
     float projectileSpeed = 1f;
     [SerializeField]
     float projectileSize = 1f;
 
+    private Controller2D controller;
+
     private Fireball fireball;
+
     private short dirX;
 
     void Awake () {
         controller = GetComponent<Controller2D> ();
-        fireball = gameObject.AddComponent<Fireball> ();
+        fireball = gameObject.AddComponent <Fireball> ();
+        Debug.Assert (fireball != null , "Fireball not found in the Resources folder.");
     }
 
     void Update () {
@@ -23,7 +26,6 @@ public class Firemage : Mastery {
     }
 
     public override void Spell1 () {
-        //cast fireball (dirX, castPoint)
         Vector2 castPoint = (Vector2) transform.position + Vector2.right * dirX * 0.5f;
         fireball.Cast (dirX , projectileSpeed , projectileSize , castPoint , gameObject);
     }

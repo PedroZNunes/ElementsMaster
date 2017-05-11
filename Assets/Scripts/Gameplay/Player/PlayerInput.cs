@@ -9,7 +9,7 @@ public class PlayerInput : MonoBehaviour {
     Player player;
     Mastery mastery;
 
-    static public event Action PressPause;
+    static public event Action PressPauseEvent;
 
 	void Awake () {
         player = GetComponent<Player> ();
@@ -61,8 +61,8 @@ public class PlayerInput : MonoBehaviour {
 
     void CheckPause () {
         if (Input.GetButtonDown ("Cancel")) {
-            if (PressPause != null) {
-                PressPause ();
+            if (PressPauseEvent != null) {
+                PressPauseEvent ();
             }
         }
     }

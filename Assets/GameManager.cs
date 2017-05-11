@@ -15,11 +15,13 @@ public class GameManager : MonoBehaviour {
 
     void Awake () {
         Objective.Triggered += OnObjectiveTriggered;
-        PlayerInput.PressPause += Pause;
+        PlayerInput.PressPauseEvent += Pause;
+
     }
 
     void Start () {
         //Gives the start to the whole game.
+        //later it will wait for the map to load async.
         Trigger (States.Opening);
     }
 
@@ -27,13 +29,13 @@ public class GameManager : MonoBehaviour {
         for (int i = 0 ; i < objectives.Count; i++) {
             objectives[i].Reset();
         }
+        
     }
 
     void StartOpening () {
         foreach (Objective obj in GameObject.FindObjectsOfType<Objective> ()) {
             objectives.Add (obj);
         }
-
         Trigger (States.Play);
     }
 

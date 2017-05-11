@@ -4,21 +4,20 @@ using UnityEngine;
 
 [RequireComponent (typeof (Movement))]
 public class Player : Actor {
-
+    
     [SerializeField]
-    static GameObject playerPrefab;
+    private Transform spawnPoint;
 
     [SerializeField]
     static Transform playerHolder;
 
     [HideInInspector]
     public Movement movement;
-
-    static Vector3 spawnPosition;
+    
     static Vector3 currentPosition;
 
-
     //Singleton Instance
+    private static Player instance = null;
     public static Player Instance {
         get {
             if (instance == null) {
@@ -27,30 +26,19 @@ public class Player : Actor {
             return instance;
         }
     }
-    private static Player instance = null;
+    //the player must receive the mastery before the opening animations and should addcomponent the desired mastery. the desired mastery must add all component it uses
+    //and the playerinput should stay mastery-agnostic
 
     void Awake () {
         controller = GetComponent<Controller2D> ();
         movement = GetComponent<Movement> ();
     }
 
-    public static void Spawn () {
-        spawnPosition = GameObject.FindGameObjectWithTag (MyTags.playerRespawn.ToString ()).transform.position;
-        Debug.Assert (spawnPosition != null , "No player spawn location set");
-
-        if (instance == null && FindObjectOfType<Player> () == null) {
-            Debug.Log ("Spawning Player");
-            GameObject playerGO =  Instantiate (playerPrefab , spawnPosition , Quaternion.identity , playerHolder);
-            if (instance == null) {
-                instance = playerGO.GetComponent<Player> ();
-            }
-        }
-        else {
-            Debug.Log ("Spawning Player failed. The player already exists");
-        }
+    public void Spawn () {
+        //play animation
+        transform.position = spawnPoint.position;
+        transform.rotation = spawnPoint.rotation;
     }
-
-    
 
     static public Vector3 GetPosition () {
         if (instance != null)

@@ -30,6 +30,10 @@ public class CameraFollow : MonoBehaviour {
     Vector2 smoothVelocity;
 
     void Start () {
+        if (target == null) {
+            target = FindObjectOfType<Player> ().GetComponent<Controller2D>();
+        }
+
         focusArea = new FocusArea (target.collider.bounds , focusAreaSize);
         currentSmoothTime = smoothTimeMoving;
     }
@@ -56,7 +60,6 @@ public class CameraFollow : MonoBehaviour {
 
         focusPosition += Vector2.right * lookAhead.currentX;
         transform.position = (Vector3)focusPosition + Vector3.forward * -10;
-        
     }
 
     void OnDrawGizmos () {
