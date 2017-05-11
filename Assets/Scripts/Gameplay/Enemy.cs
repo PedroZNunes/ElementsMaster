@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent (typeof (Controller2D) , typeof (Movement), typeof(EnemyAI))]
+[RequireComponent (typeof (Movement), typeof(EnemyAI))]
 public class Enemy : Actor {
 
     [HideInInspector]
     public Movement movement;
 
-    Controller2D controller;
     EnemyAI ai;
     
     public int difficulty;

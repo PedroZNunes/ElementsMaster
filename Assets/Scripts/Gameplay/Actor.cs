@@ -2,15 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Actor : MonoBehaviour {
 
-	// Use this for initialization
-	void Start () {
-		
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
-	}
+[RequireComponent (typeof (Controller2D))]
+public class Actor : MonoBehaviour {
+    protected Controller2D controller;
 }

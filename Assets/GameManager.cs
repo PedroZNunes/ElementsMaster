@@ -15,7 +15,7 @@ public class GameManager : MonoBehaviour {
 
     void Awake () {
         Objective.Triggered += OnObjectiveTriggered;
-        PlayerInput.OnPressPause += Pause;
+        PlayerInput.PressPause += Pause;
     }
 
     void Start () {

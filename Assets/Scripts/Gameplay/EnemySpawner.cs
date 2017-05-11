@@ -46,9 +46,7 @@ public class EnemySpawner : MonoBehaviour {
         //Count how many enemies are on the screen
         Enemy[] enemy = FindObjectsOfType<Enemy> ();
         for (int i = 0 ; i < enemy.Length; i++) {
-            if (enemy[i].gameObject.CompareTag (MyTags.LesserCreep.ToString ())){
-                //count the amount of lesser creeps
-            } else if (enemy[i].gameObject.CompareTag (MyTags.MediumCreep.ToString ())) {
+            if (enemy[i].gameObject.CompareTag (MyTags.Enemy.ToString ())){
                 //count the amount of medium creeps
                 //ps. this could be done in a dictionary<Enemy, EnemyCount>. fill up the dictionary every frame
             }

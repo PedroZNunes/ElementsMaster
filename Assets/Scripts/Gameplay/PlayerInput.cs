@@ -7,12 +7,14 @@ using System;
 public class PlayerInput : MonoBehaviour {
 
     Player player;
+    Mastery mastery;
 
-    static public event Action OnPressPause;
+    static public event Action PressPause;
 
 	void Awake () {
         player = GetComponent<Player> ();
-	}
+        mastery = GetComponent<Mastery> ();
+    }
 	
 	void Update () {
         RunStateMachine ();
@@ -59,25 +61,24 @@ public class PlayerInput : MonoBehaviour {
 
     void CheckPause () {
         if (Input.GetButtonDown ("Cancel")) {
-            if (OnPressPause != null) {
-                OnPressPause ();
+            if (PressPause != null) {
+                PressPause ();
             }
         }
     }
 
     void CheckActions () {
-        if (Input.GetButtonDown ("Fire1")){
-            if (Fire1Event != null) {
-                Fire1Event ();
-            }
-        } else if (Input.GetButtonDown ("Fire2")) {
-            if (Fire2Event != null) {
-                Fire2Event ();
-            }
-        } else if (Input.GetButtonDown ("Fire3")) {
-            if (Fire1Event != null) {
-                Fire1Event ();
-            }
+        if (Input.GetButtonDown ("Fire1")) {
+            mastery.Spell1 ();
+        }
+        else if (Input.GetButtonDown ("Fire2")) {
+            mastery.Spell2 ();
+        }
+        else if (Input.GetButtonDown ("Fire3")) {
+            mastery.Spell3 ();
+        }
+        else if (Input.GetButtonDown ("Fire4")) {
+            mastery.Spell4 ();
         }
     }
 

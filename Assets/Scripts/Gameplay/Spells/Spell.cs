@@ -12,7 +12,7 @@ public class Spell : MonoBehaviour {
         }
     }
 
-    public virtual void CastSpell (int dirX) { }
+    public virtual void Cast (int dirX, float speed, float size, Vector2 castPoint, GameObject owner) { }
 
 
 

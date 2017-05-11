@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent (typeof(Controller2D), typeof (Movement))]
+[RequireComponent (typeof (Movement))]
 public class Player : Actor {
 
     [SerializeField]
@@ -11,12 +11,8 @@ public class Player : Actor {
     [SerializeField]
     static Transform playerHolder;
 
-    public Vector3 castPoint { get; private set; }
-
     [HideInInspector]
     public Movement movement;
-
-    Controller2D controller;
 
     static Vector3 spawnPosition;
     static Vector3 currentPosition;
@@ -36,7 +32,6 @@ public class Player : Actor {
     void Awake () {
         controller = GetComponent<Controller2D> ();
         movement = GetComponent<Movement> ();
-        castPoint = transform.FindChild ("Cast Point").transform.position;
     }
 
     public static void Spawn () {

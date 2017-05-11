@@ -5,42 +5,30 @@ using UnityEngine;
 public class Fireball : Spell {
 
     [SerializeField]
-    GameObject prefab;
-    Transform spellsHolder;
-
-    FireballProjectile fireballProjectile;
+    protected Object prefab;
 
     float cooldown;
-    float projectileSpeed;
 
+    Transform holder;
 
-    // Use this for initialization
-    void Awake () {
-        spellsHolder = GameObject.FindGameObjectWithTag (MyTags.SpellHolder.ToString()).transform;
-	}
-	
-	// Update is called once per frame
+	void Awake () {
+        holder = GameObject.FindWithTag (MyTags.ProjectileHolder.ToString ()).transform;
+    }
+
 	void Update () {
 		if (cooldown > 0) {
             cooldown -= Time.deltaTime;
         }
 	}
 
-    public override void CastSpell (int dirX, Vector2 spawnPoint) {
+    public override void Cast ( int dirX , float speed , float size , Vector2 castPoint , GameObject owner ) {
         if (cooldown > 0) {
             Debug.LogFormat ("Spell on cooldown. {0:0.0}s", cooldown);
             return;
         }
-        
-
-        GameObject fireball = Instantiate (prefab , spawnPoint , Quaternion.identity , spellsHolder) as GameObject;
-        fireballProjectile = prefab.GetComponent<FireballProjectile> ();
-        fireballProjectile.Initialize (projectileSpeed , dirX);
+        GameObject fireball = Instantiate (prefab , castPoint , Quaternion.identity , holder) as GameObject;
+        FireballProjectile projectile = fireball.GetComponent<FireballProjectile> ();
+        projectile.Initialize (ref dirX , ref speed , ref size , ref owner);
     }
 
-    void OnCollisionEnter2D (Collision2D col ) {
-        if (col.otherCollider.GetComponent<Enemy> () != null) {
-            //deal damage
-        }
-    }
 }
