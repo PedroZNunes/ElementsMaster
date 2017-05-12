@@ -13,7 +13,7 @@ public class PlayerInput : MonoBehaviour {
 
 	void Awake () {
         player = GetComponent<Player> ();
-        mastery = GetComponent<Mastery> ();
+        mastery = GetComponentInChildren<Mastery> ();
     }
 	
 	void Update () {
