@@ -13,6 +13,13 @@ public class Spell : MonoBehaviour {
 
     protected float currentCooldown;
 
+    [SerializeField]
+    protected Transform holder;
+
+    void Awake () {
+        holder = GameObject.FindWithTag (MyTags.projectileHolder.ToString ()).transform;
+    }
+
     protected virtual bool CanCast () {
         if (isOnCooldown ()) {
             Debug.LogFormat ("Spell on cooldown. {0:0.0}s" , currentCooldown);
@@ -24,6 +31,7 @@ public class Spell : MonoBehaviour {
     }
 
     public virtual void Cast (int dirX, float speed, float size, Vector2 castPoint, GameObject owner) { }
+    public virtual void Cast ( int dirX , GameObject owner ) { }
 
     protected void Update () {
         if (isOnCooldown ()) {

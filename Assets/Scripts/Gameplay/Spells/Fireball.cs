@@ -2,22 +2,27 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Fireball : Spell {
+public sealed class Fireball : Spell {
 
     [SerializeField]
-    protected Object prefab;
-
-    Transform holder;
+    Object prefab;
+    [SerializeField]
+    float velocity = 15f;
+    
+    float size = 1f;
 
 	void Awake () {
-        holder = GameObject.FindWithTag (MyTags.projectileHolder.ToString ()).transform;
+        if (holder ==  null)
+            holder = GameObject.FindWithTag (MyTags.projectileHolder.ToString ()).transform;
     }
 
-    public override void Cast ( int dirX , float speed , float size , Vector2 castPoint , GameObject owner ) {
+    public override void Cast ( int dirX , float speedMod , float sizeMod , Vector2 castPoint , GameObject owner ) {
         if (CanCast ()) {
-            GameObject fireball = Instantiate (prefab , castPoint , Quaternion.identity , holder) as GameObject;
-            FireballProjectile projectile = fireball.GetComponent<FireballProjectile> ();
-            projectile.Initialize (ref dirX , ref speed , ref size , ref owner);
+            GameObject fireballGO = Instantiate (prefab , castPoint , Quaternion.identity , holder) as GameObject;
+            FireballProjectile projectile = fireballGO.GetComponent<FireballProjectile> ();
+            float finalVelocity = velocity * speedMod;
+            float finalSize = size * sizeMod;
+            projectile.Initialize (ref dirX , ref finalVelocity , ref finalSize , ref owner);
         }
     }
 

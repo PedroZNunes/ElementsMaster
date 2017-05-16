@@ -2,39 +2,41 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent (typeof(Fireball))]
+[RequireComponent (typeof(Fireball), typeof (FireDash))]
 public class Firemage : Mastery {
 
     private Spells spells;
+    [SerializeField]
+    Transform castPoint;
 
-    [SerializeField]
-    float projectileSpeed = 1f;
-    [SerializeField]
-    float projectileSize = 1f;
+    public float projectileSpeedMod = 1f;
+    public float projectileSizeMod = 1f;
 
     private Controller2D controller;
 
-    private int dirX;
+    private int castDirection;
 
     void Awake () {
         controller = GetComponentInParent<Controller2D> ();
         spells.fireball = gameObject.GetComponent <Fireball> ();
+        spells.fireDash = gameObject.GetComponent<FireDash> ();
     }
 
     void Update () {
-        dirX = controller.collisions.faceDirection;
+        castDirection = (int) Mathf.Sign (Input.GetAxisRaw ("Horizontal")); ;
     }
 
     public override void Spell1 () {
         if (inGlobalCD ()) { return; }
         globalCD += spells.fireball.GlobalCD;
-        Vector2 castPoint = (Vector2) transform.position + Vector2.right * dirX * 0.5f;
-        spells.fireball.Cast (dirX , projectileSpeed , projectileSize , castPoint , gameObject);
+        
+        spells.fireball.Cast (castDirection , projectileSpeedMod , projectileSizeMod , castPoint.position , gameObject);
     }
 
     public override void Spell2 () {
         if (inGlobalCD ()) { return; }
-        //cast firedash (dirX)
+        globalCD += spells.fireDash.GlobalCD;
+        spells.fireDash.Cast (castDirection , gameObject);
     }
 
     public override void Spell3 () {
@@ -50,5 +52,6 @@ public class Firemage : Mastery {
     [System.Serializable]
     struct Spells {
         public Fireball fireball;
+        public FireDash fireDash;
     }
 }

@@ -10,10 +10,12 @@ public class Movement : MonoBehaviour {
     [SerializeField]
     Wall wall;
 
+
     bool isWallSliding;
     int wallDirX;
-    float gravity;
+    public float gravity { get; private set; }
     float smoothVelocityX;
+    public Vector2 MaxSpeed { get { return new Vector2 (moveSpeed , jump.velocityMax); } }
 
     [SerializeField]
     float moveSpeed;
@@ -62,6 +64,10 @@ public class Movement : MonoBehaviour {
 
     public void SetDirectionalInput(Vector2 input ) {
         directionalInput = input;
+    }
+
+    public void SetVelocity (Vector2 newVelocity) {
+        velocity = newVelocity;
     }
 
     public void HandleMovement () {
@@ -126,10 +132,9 @@ public class Movement : MonoBehaviour {
             }
             else if (controller.collisions.below) {
                 velocity.y = jump.velocityMax;
-                StartCoroutine (CountJumpLength ());
+                //StartCoroutine (TrackHeightAndLength ());
             }
         }
-
     }
 
     public void HandleCancelJump () {
@@ -142,18 +147,23 @@ public class Movement : MonoBehaviour {
         controller.DeactivateRays (rayDeactivateTime);
     }
 
-    IEnumerator CountJumpLength () {
-        float timeCount = 0f;
-        float x1 = transform.position.x;
-        timeCount += Time.deltaTime;
-        yield return null;
-        while (!controller.collisions.below) {
-            timeCount += Time.deltaTime;
-            yield return null;
-        }
-        float x2 = transform.position.x;
-        print (string.Format("Jump - Length: {0:0.000} || Duration {1:0.000}", ( x2 - x1 ),timeCount));
-    }
+    ////maybe I`ll need this later
+    //IEnumerator TrackHeightAndLength () {
+    //    float timeCount = 0f;
+    //    float x1 = transform.position.x;
+    //    timeCount += Time.deltaTime;
+    //    float initialHeight = transform.position.y;
+    //    currentJumpHeight = initialHeight;
+    //    yield return null;
+    //    while (!controller.collisions.below) {
+    //        currentJumpHeight = transform.position.y - initialHeight;
+    //        timeCount += Time.deltaTime;
+    //        yield return null;
+    //    }
+    //    currentJumpHeight = 0f;
+    //    float x2 = transform.position.x;
+    //    print (string.Format("Jump - Length: {0:0.000} || Duration {1:0.000}", ( x2 - x1 ),timeCount));
+    //}
 
     //deltaMovement = V0 * t + (a(t^2))/2
     //jumpHeight = (gravity * timeToJumpApex^2)/2
