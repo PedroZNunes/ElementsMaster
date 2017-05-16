@@ -1,17 +1,16 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class BoardManager : MonoBehaviour {
 
-    const int ROWS = 40;
-    const int COLUMNS = 40;
+    private const int ROWS = 40;
+    private const int COLUMNS = 40;
 
     public IntVector2 extents = new IntVector2 (ROWS / 2 , COLUMNS / 2);
 
-    Dictionary<Vector3 , Block> board = new Dictionary<Vector3 , Block> ();
+    private Dictionary<Vector3 , Block> board = new Dictionary<Vector3 , Block> ();
 
-    List<SubGrid> subGrids = new List<SubGrid> ();
+    private List<SubGrid> subGrids = new List<SubGrid> ();
 
     void OnValidate () {
         if (ROWS % 2 != 0 || COLUMNS % 2 != 0) { //rows and columns should be even.
@@ -26,7 +25,7 @@ public class BoardManager : MonoBehaviour {
     // Fills the board with the blocks already placed in the inspector. All blocks should have integer coordinates.
     // This is temporary until I make a map generator.
 
-    void FillBoardList () {
+    private void FillBoardList () {
         board.Clear ();
 
         Block[] blocksList = FindObjectsOfType<Block> ();
@@ -42,7 +41,7 @@ public class BoardManager : MonoBehaviour {
         }
     }
 
-    void CreateSubGrids () {
+    private void CreateSubGrids () {
         //divide the grid in sub grids 1x1;
         for (int i = -extents.x ; i < extents.x ; i++) {
             for (int j = -extents.y ; j < extents.y ; j++) {
@@ -51,22 +50,18 @@ public class BoardManager : MonoBehaviour {
         }
 
     //  choose randomly a vertice to merge ( vector2 (random.range int, random.range int))
-    //FixMe: This does not work.vv I need a list contining all vertices of the map. 
+    //FixMe: This does not work.vv I need a list containing all vertices of the map. 
     //http://www-cs-students.stanford.edu/~amitp/game-programming/grids/
-    //this can help you. maybe we should associate this faces to vertices. the faces are currently centered on the ints, which make the vertices 0.5fs.
+    //this can help you. maybe we should associate the faces to vertices. the faces are currently centered on the ints, which make the vertices 0.5fs.
         Vector2 randomVertice = new Vector2 (Random.Range (-extents.x , extents.x) , Random.Range (-extents.y, extents.y));
         SubGrid newSubGrid;
         bool isMerged = TryMergeSubGrids (randomVertice , out newSubGrid);
     }
 
     ///  o grid resultante não pode ser enorme.
-        ///done with the subgrids.
+    ///done with the subgrids.
 
-
-
-
-
-    bool TryMergeSubGrids ( Vector2 vertice, out SubGrid newSubGrid ) {
+    private bool TryMergeSubGrids ( Vector2 vertice, out SubGrid newSubGrid ) {
         List<SubGrid> ToMerge = new List<SubGrid> ();
         for (int i = 0 ; i < subGrids.Count; i++) {
             if (subGrids[i].Contains(vertice)) {
@@ -124,9 +119,7 @@ public struct IntVector2 {
     public IntVector2 (int x, int y ) {
         this.x = x;
         this.y = y;
-    }
-
-    
+    }   
 }
 
 public class SubGrid {
@@ -160,8 +153,5 @@ public class SubGrid {
 
     public Bounds GetBounds () {
         return bounds;
-    }
-
-    
-        
+    }   
 }

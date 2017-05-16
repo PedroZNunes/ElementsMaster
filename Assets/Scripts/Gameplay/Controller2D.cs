@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using System;
 
 public class OnCollisionEventArgs : EventArgs {
@@ -14,22 +12,23 @@ public class Controller2D : MonoBehaviour {
 
     public event EventHandler<OnCollisionEventArgs> OnCollision;
 
-    const float SKINWIDTH = 0.015f;
-    const float distanceBetweenRays = 0.25f;
+    private const float SKINWIDTH = 0.015f;
+    private const float distanceBetweenRays = 0.25f;
 
-    int horizontalRayCount;
-    int verticalRayCount;
+    private int horizontalRayCount;
+    private int verticalRayCount;
 
-    float horizontalRaySpacing;
-    float verticalRaySpacing;
+    private float horizontalRaySpacing;
+    private float verticalRaySpacing;
 
-    bool raysDeactivated = false;
+    private bool raysDeactivated = false;
 
     [SerializeField]
-    LayerMask collisionMask;
+    private LayerMask collisionMask;
     [HideInInspector]
     public BoxCollider2D collider;
-    RaycastOrigins raycastOrigins;
+
+    private RaycastOrigins raycastOrigins;
     public CollisionInfo collisions;
 
     void Awake () {

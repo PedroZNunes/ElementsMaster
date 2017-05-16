@@ -1,21 +1,16 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class FireballProjectile : Projectile {
 
     public GameObject owner { get; private set; }
 
-    Vector2 dir;
-    float speed;
-    float size;
+    private Vector2 dir;
+    private float speed;
+    private float size;
+    private float maxDuration = 4f;
 
-    public void Initialize (ref int dirX, ref float speed, ref float size, ref GameObject owner) {
-        dir = Vector2.right * dirX;
-        this.speed = speed;
-        this.size = size;
-        this.owner = owner;
-        Debug.Log ("init");
+    void OnEnable () {
+        Destroy (gameObject , maxDuration); //TODO: projectiles object pool for memory fragmentation
     }
 
     void Start () {
@@ -38,5 +33,13 @@ public class FireballProjectile : Projectile {
     void OnDestroy () {
         Debug.Log("FireballProjectile destroyed.");
         //remove this projectile from lists and whatever event or i dont know yet
+    }
+
+
+    public void Initialize ( ref int dirX , ref float speed , ref float size , ref GameObject owner ) {
+        dir = Vector2.right * dirX;
+        this.speed = speed;
+        this.size = size;
+        this.owner = owner;
     }
 }

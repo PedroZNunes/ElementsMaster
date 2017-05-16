@@ -1,22 +1,20 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class TheFireDash : MonoBehaviour {
 
-    GameObject playerGO;
-    Collider2D col;
-    float duration = 0f;
-    float currentDuration = 0f;
-    float delay = 0f;
-    float speedBurst = 0f;
-    int dirX;
-    Movement movement;
+    private float duration = 0f;
+    private float currentDuration = 0f;
+    private float delay = 0f;
+
+    private float speedBurst = 0f;
+    private int dirX = 0;
+
+    private Movement movement;
+    private Collider2D col;
 
     void Awake () {
-        playerGO = GameObject.FindGameObjectWithTag (MyTags.player.ToString ());
         col = GetComponent<Collider2D> ();
-        movement = playerGO.GetComponent<Movement> ();
+        movement = GetComponentInParent<Movement> ();
     }
 
     public void Initialize (int dirX, float duration, float delay, float speedBurst) {
@@ -40,12 +38,9 @@ public class TheFireDash : MonoBehaviour {
         }
     }
 
-
     void OnTriggerEnter2D(Collider2D col ) {
         if (col.CompareTag (MyTags.enemy.ToString ())) {
             Debug.Log ("Enemy got struck by the fire sword! Lost dmg HP");
         }
     }
-
-
 }

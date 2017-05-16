@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using System;
 
 [RequireComponent(typeof(Player))]
@@ -10,6 +8,7 @@ public class PlayerInput : MonoBehaviour {
     Mastery mastery;
 
     static public event Action PressPauseEvent;
+
 
 	void Awake () {
         player = GetComponent<Player> ();
@@ -81,7 +80,4 @@ public class PlayerInput : MonoBehaviour {
             mastery.Spell4 ();
         }
     }
-
-
-
 }

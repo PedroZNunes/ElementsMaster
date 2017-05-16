@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 // Responsible for maping the level in terms of possible movements. this will use A*
 public class PathFinder : MonoBehaviour {

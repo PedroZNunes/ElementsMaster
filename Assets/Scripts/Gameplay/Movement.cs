@@ -1,37 +1,35 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 [RequireComponent(typeof(Controller2D))]
 public class Movement : MonoBehaviour {
 
     [SerializeField]
-    Jump jump;
+    private Jump jump;
+
     [SerializeField]
-    Wall wall;
+    private Wall wall;
+    private float wallUnstickTime;
+    private bool isWallSliding;
+    private int wallDirX;
 
-
-    bool isWallSliding;
-    int wallDirX;
     public float gravity { get; private set; }
-    float smoothVelocityX;
     public Vector2 MaxSpeed { get { return new Vector2 (moveSpeed , jump.velocityMax); } }
 
     [SerializeField]
-    float moveSpeed;
+    private float moveSpeed = 10f;
     [SerializeField]
-    float accelerationTimeAirBorne = 0.4f;
+    private float accelerationTimeAirBorne = 0.4f;
     [SerializeField]
-    float accelerationTimeGrounded = 0.1f;
+    private float accelerationTimeGrounded = 0.1f;
 
     [SerializeField]
-    float rayDeactivateTime = 0.2f;
+    private float rayDeactivateTime = 0.2f;
 
-    float wallUnstickTime;
-    Controller2D controller;
-    Vector3 velocity;
+    private float smoothVelocityX;
+    private Controller2D controller;
+    private Vector3 velocity;
 
-    Vector2 directionalInput;
+    private Vector2 directionalInput;
 
     void Awake () {
         controller = GetComponent<Controller2D> ();
@@ -198,6 +196,4 @@ public class Movement : MonoBehaviour {
         public Vector2 jumpOff, leap, climb;
         public float slideSpeedMax;
     }
-
-
 }

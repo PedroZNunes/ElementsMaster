@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 [RequireComponent (typeof (Movement))]
 public class Player : Actor {
@@ -9,12 +7,12 @@ public class Player : Actor {
     private Transform spawnPoint;
 
     [SerializeField]
-    static Transform playerHolder;
+    private static Transform playerHolder;
 
     [HideInInspector]
     public Movement movement;
-    
-    static Vector3 currentPosition;
+
+    private static Vector3 currentPosition;
 
     //Singleton Instance
     private static Player instance = null;
@@ -46,5 +44,4 @@ public class Player : Actor {
         Debug.Log ("Player instance not set");
         return Vector3.zero;
     }
-
 }

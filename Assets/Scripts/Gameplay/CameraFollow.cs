@@ -1,33 +1,32 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class CameraFollow : MonoBehaviour {
 
     [SerializeField]
-    float verticalOffset;
+    private float verticalOffset;
     [SerializeField]
-    Controller2D target;
-    [SerializeField]
-    Vector2 focusAreaSize;
-
-    FocusArea focusArea;
-    Coroutine cameraIdling;
+    private Controller2D target;
 
     [SerializeField]
-    LookAhead lookAhead;
-    [SerializeField]
-    Vector2 smoothTimeIdle;
-    [SerializeField]
-    Vector2 smoothTimeMoving;
-    [SerializeField]
-    float smoothChangeTime;
-    Vector2 smoothChangeVelocity;
+    private Vector2 focusAreaSize;
+    private FocusArea focusArea;
 
-    float smoothMaxSpeed = 3f;
-    bool isFocusMoving = false;
-    Vector2 currentSmoothTime;
-    Vector2 smoothVelocity;
+    [SerializeField]
+    private LookAhead lookAhead;
+
+    [SerializeField]
+    private Vector2 smoothTimeIdle;
+    [SerializeField]
+    private Vector2 smoothTimeMoving;
+    [SerializeField]
+    private float smoothChangeTime;
+    private Vector2 currentSmoothTime;
+
+    private Vector2 smoothChangeVelocity;
+    private Vector2 smoothVelocity;
+    private float smoothMaxSpeed = 3f;
+    
+    private bool isFocusMoving = false;
 
     void Start () {
         if (target == null) {

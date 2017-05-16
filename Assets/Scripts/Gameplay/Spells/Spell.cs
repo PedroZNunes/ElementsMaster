@@ -9,9 +9,8 @@ public class Spell : MonoBehaviour {
     public float GlobalCD { get { return globalCD; } protected set { globalCD = value; } }
 
     [SerializeField]
-    protected float baseCooldown;
-
-    protected float currentCooldown;
+    protected float baseCD;
+    protected float currentCD;
 
     [SerializeField]
     protected Transform holder;
@@ -22,25 +21,25 @@ public class Spell : MonoBehaviour {
 
     protected virtual bool CanCast () {
         if (isOnCooldown ()) {
-            Debug.LogFormat ("Spell on cooldown. {0:0.0}s" , currentCooldown);
+            Debug.LogFormat ("Spell on cooldown. {0:0.0}s" , currentCD);
             return false;
         } else {
-            currentCooldown = baseCooldown;
+            currentCD = baseCD;
             return true;
         }
     }
 
     public virtual void Cast (int dirX, float speed, float size, Vector2 castPoint, GameObject owner) { }
-    public virtual void Cast ( int dirX , GameObject owner ) { }
+    public virtual void Cast ( int dirX ) { }
 
     protected void Update () {
         if (isOnCooldown ()) {
-            currentCooldown -= Time.deltaTime;
+            currentCD -= Time.deltaTime;
         }
     }
 
     public bool isOnCooldown () {
-        return ( currentCooldown > 0 );
+        return ( currentCD > 0 );
     }
 
 }

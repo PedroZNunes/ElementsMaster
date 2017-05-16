@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
+﻿using UnityEngine;
 
 //This will be used for map generating. This is responsible for testing the map and seeing wether it works or not.
 [RequireComponent(typeof(Player))]
@@ -34,8 +31,6 @@ public class PlayerAI : MonoBehaviour {
     ///bool TryPath(Subgrid subgrid ){
     ///
     ///}
-
-
 }
 
 struct State {

@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 [RequireComponent (typeof (BoxCollider2D))]
 public class Block : MonoBehaviour {
@@ -12,5 +10,4 @@ public class Block : MonoBehaviour {
     protected virtual void Awake () {
         boxCollider = GetComponent<BoxCollider2D> ();
     }
-
 }

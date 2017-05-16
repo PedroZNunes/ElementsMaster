@@ -1,15 +1,15 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public sealed class Fireball : Spell {
 
     [SerializeField]
-    Object prefab;
+    private Object prefab;
+
     [SerializeField]
-    float velocity = 15f;
+    private float velocity = 15f;
+
+    private float size = 1f;
     
-    float size = 1f;
 
 	void Awake () {
         if (holder ==  null)
@@ -25,5 +25,4 @@ public sealed class Fireball : Spell {
             projectile.Initialize (ref dirX , ref finalVelocity , ref finalSize , ref owner);
         }
     }
-
 }

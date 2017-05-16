@@ -2,22 +2,22 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class EnemySpawner : MonoBehaviour {
+public sealed class EnemySpawner : MonoBehaviour {
 
     [SerializeField]
-    LayerMask obstacleCollisionMask;
+    private LayerMask obstacleCollisionMask;
     [SerializeField]
-    List<GameObject> enemyPrefabs = new List<GameObject> ();
+    private List<GameObject> enemyPrefabs = new List<GameObject> ();
     [SerializeField]
-    float spawnIntervalBase;    //the interval should be based on the difficulty per second that the game gets.
+    private float spawnIntervalBase;    //the interval should be based on the difficulty per second that the game gets.
                                 //allowing for faster spawns later. It should not spawn always at the same interval, though.
     [SerializeField]
-    string holderName = "Enemies";
-    Transform enemyHolder;
+    private string holderName = "Enemies";
+    private Transform enemyHolder;
 
-    Coroutine spawningCoroutine;
+    private Coroutine spawningCoroutine;
 
-    List<Vector2> coordinatesUsed = new List<Vector2> ();
+    private List<Vector2> coordinatesUsed = new List<Vector2> ();
 
     void Awake () {
         enemyHolder = new GameObject (holderName).transform;
