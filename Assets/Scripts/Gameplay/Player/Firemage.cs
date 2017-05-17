@@ -7,6 +7,7 @@ public class Firemage : Mastery {
 
     [SerializeField]
     private Transform castPoint;
+    private int previousCastDirection;
     private int castDirection;
 
     public float projectileSpeedMod = 1f;
@@ -22,7 +23,8 @@ public class Firemage : Mastery {
     }
 
     void Update () {
-        castDirection = (int) Mathf.Sign (Input.GetAxisRaw ("Horizontal"));
+        if (Input.GetAxisRaw ("Horizontal") != 0 && Input.GetAxisRaw ("Horizontal") != castDirection) 
+            castDirection = (int) Input.GetAxisRaw ("Horizontal");
     }
 
     public override void Spell1 () {
