@@ -27,20 +27,21 @@ public class TheFireDash : MonoBehaviour {
     void Update () {
         if (currentDuration < delay) {
             currentDuration += Time.deltaTime;
-            movement.SetVelocity (Vector2.zero);
+            movement.Velocity = Vector2.zero;
         } else if (currentDuration < duration + delay) {
-            movement.SetVelocity (new Vector2 (movement.MaxSpeed.x * speedBurst * dirX, -movement.gravity * Time.deltaTime));
+            movement.Velocity = new Vector2 (movement.MaxSpeed.x * speedBurst * dirX, -movement.gravity * Time.deltaTime);
             currentDuration += Time.deltaTime;
         }
         else {
             currentDuration = 0f;
+            movement.Velocity /= 2;
             gameObject.SetActive (false);
         }
     }
 
     void OnTriggerEnter2D(Collider2D col ) {
         if (col.CompareTag (MyTags.enemy.ToString ())) {
-            Debug.Log ("Enemy got struck by the fire sword! Lost dmg HP");
+            Debug.Log ("Enemy got struck by the fire dash! Lost xxx HP");
         }
     }
 }

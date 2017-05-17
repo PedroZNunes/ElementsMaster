@@ -13,7 +13,9 @@ public class Movement : MonoBehaviour {
     private int wallDirX;
 
     public float gravity { get; private set; }
-    public Vector2 MaxSpeed { get { return new Vector2 (moveSpeed , jump.velocityMax); } }
+    public Vector2 MaxSpeed {
+        get { return new Vector2 (moveSpeed , jump.velocityMax); }
+    }
 
     [SerializeField]
     private float moveSpeed = 10f;
@@ -28,6 +30,10 @@ public class Movement : MonoBehaviour {
     private float smoothVelocityX;
     private Controller2D controller;
     private Vector3 velocity;
+    public Vector2 Velocity {
+        get { return velocity; }
+        set { velocity = new Vector3 (value.x , value.y , 0); }
+    }
 
     private Vector2 directionalInput;
 
@@ -62,10 +68,6 @@ public class Movement : MonoBehaviour {
 
     public void SetDirectionalInput(Vector2 input ) {
         directionalInput = input;
-    }
-
-    public void SetVelocity (Vector2 newVelocity) {
-        velocity = newVelocity;
     }
 
     public void HandleMovement () {

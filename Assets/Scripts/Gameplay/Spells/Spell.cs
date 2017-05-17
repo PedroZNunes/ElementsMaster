@@ -13,7 +13,7 @@ public class Spell : MonoBehaviour {
     protected float currentCD;
 
     [SerializeField]
-    protected Transform holder;
+    protected static Transform holder;
 
     void Awake () {
         holder = GameObject.FindWithTag (MyTags.projectileHolder.ToString ()).transform;
@@ -29,8 +29,10 @@ public class Spell : MonoBehaviour {
         }
     }
 
-    public virtual void Cast (int dirX, float speed, float size, Vector2 castPoint, GameObject owner) { }
+    public virtual void Cast ( int dirX , float speed , float size , Vector2 castPoint , GameObject owner ) { }
+    public virtual void Cast ( int dirX , Vector2 castPoint ) { }
     public virtual void Cast ( int dirX ) { }
+    
 
     protected void Update () {
         if (isOnCooldown ()) {

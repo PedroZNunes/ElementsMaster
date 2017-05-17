@@ -13,7 +13,7 @@ public class FireballProjectile : Projectile {
         Destroy (gameObject , maxDuration); //TODO: projectiles object pool for memory fragmentation
     }
 
-    void Start () {
+    void Awake () {
         transform.localScale = Vector2.one * size;
     }
 
