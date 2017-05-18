@@ -36,7 +36,7 @@ public class FireballProjectile : Projectile {
     }
 
 
-    public void Initialize ( ref int dirX , ref float speed , ref float size , ref GameObject owner ) {
+    public void Initialize ( int dirX , ref float speed , ref float size , ref GameObject owner ) {
         dir = Vector2.right * dirX;
         this.speed = speed;
         this.size = size;

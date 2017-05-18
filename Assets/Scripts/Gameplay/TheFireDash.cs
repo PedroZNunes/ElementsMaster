@@ -7,13 +7,11 @@ public class TheFireDash : MonoBehaviour {
     private float delay = 0f;
 
     private float speedBurst = 0f;
-    private int dirX = 0;
+    private int dirX ;
 
     private Movement movement;
-    private Collider2D col;
 
     void Awake () {
-        col = GetComponent<Collider2D> ();
         movement = GetComponentInParent<Movement> ();
     }
 

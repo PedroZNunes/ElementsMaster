@@ -9,7 +9,7 @@ public class Movement : MonoBehaviour {
     [SerializeField]
     private Wall wall;
     private float wallUnstickTime;
-    private bool isWallSliding;
+    public bool isWallSliding { get; private set; }
     private int wallDirX;
 
     public float gravity { get; private set; }
@@ -36,6 +36,8 @@ public class Movement : MonoBehaviour {
     }
 
     private Vector2 directionalInput;
+
+    public int DirX { get { return controller.collisions.faceDirection; } }
 
     void Awake () {
         controller = GetComponent<Controller2D> ();

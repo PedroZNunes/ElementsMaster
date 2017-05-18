@@ -34,21 +34,21 @@ public class Firemage : Mastery {
         globalCD += spells.fireball.GlobalCD;
         //TODO: Spell has 3 charges that replenish a little bit slower than the gdc, so that the player cant spam and also gets a new musicality to the skill set. 
         //think about making this a homing fire ball. Ori-like
-        spells.fireball.Cast (castDirection , projectileSpeedMod , projectileSizeMod , castPoint.position , gameObject);
+        spells.fireball.Cast ( projectileSpeedMod , projectileSizeMod , gameObject);
     }
 
     public override void Spell2 () {
         if (inGlobalCD ()) { return; }
         globalCD += spells.fireDash.GlobalCD;
         //TODO: if you hit and enemy, you gain refill (up to three dashes in a row). but first we need enemies.
-        spells.fireDash.Cast (castDirection);
+        spells.fireDash.Cast ( );
     }
 
     public override void Spell3 () {
         if (inGlobalCD ()) { return; }
         globalCD += spells.firewall.GlobalCD;
 
-        spells.firewall.Cast (castDirection, castPoint.position);
+        spells.firewall.Cast ( );
         
     }
 
@@ -56,8 +56,7 @@ public class Firemage : Mastery {
         if (inGlobalCD ()) { return; }
         globalCD += spells.conflagrate.GlobalCD;
 
-        spells.conflagrate.Cast ();
-        //cast coflagrate
+        spells.conflagrate.Cast ( );
     }
 
     [System.Serializable]

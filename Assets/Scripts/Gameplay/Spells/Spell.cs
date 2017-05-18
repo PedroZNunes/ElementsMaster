@@ -15,8 +15,18 @@ public class Spell : MonoBehaviour {
     [SerializeField]
     protected static Transform holder;
 
-    void Awake () {
+    [SerializeField]
+    protected Vector3 castOffset;
+    public Vector3 CastPoint { get; protected set; }
+    protected int castDirX;
+
+    protected Movement movement;
+    
+
+    protected void OnEnable () {
         holder = GameObject.FindWithTag (MyTags.projectileHolder.ToString ()).transform;
+        movement = GetComponentInParent<Movement> ();
+        CastPoint += transform.position + castOffset;
     }
 
     protected virtual bool CanCast () {
@@ -29,11 +39,16 @@ public class Spell : MonoBehaviour {
         }
     }
 
-    public virtual void Cast ( int dirX , float speed , float size , Vector2 castPoint , GameObject owner ) { }
-    public virtual void Cast ( int dirX , Vector2 castPoint ) { }
-    public virtual void Cast ( int dirX ) { }
-    
+    protected virtual void SetCastPointAndDirection () {
+        castDirX = ( movement.isWallSliding ) ? -movement.DirX : movement.DirX;
+        CastPoint = new Vector3 (transform.position.x + ( castOffset.x * castDirX ) , transform.position.y + castOffset.y);
+    }
 
+    public virtual void Cast ( float speed , float size , GameObject owner ) { }
+    public virtual void Cast ( ) {
+        SetCastPointAndDirection ();
+    }
+    
     protected void Update () {
         if (isOnCooldown ()) {
             currentCD -= Time.deltaTime;
@@ -42,6 +57,10 @@ public class Spell : MonoBehaviour {
 
     public bool isOnCooldown () {
         return ( currentCD > 0 );
+    }
+
+    void OnDrawGizmos () {
+        Gizmos.DrawSphere (CastPoint , 0.25f);
     }
 
 }

@@ -10,13 +10,15 @@ public sealed class Fireball : Spell {
 
     private float size = 1f;
     
-    public override void Cast ( int dirX , float speedMod , float sizeMod , Vector2 castPoint , GameObject owner ) {
+    public override void Cast ( float speedMod , float sizeMod , GameObject owner ) {
         if (CanCast ()) {
-            GameObject fireballGO = Instantiate (prefab , castPoint , Quaternion.identity , holder) as GameObject;
+            base.Cast ();
+            GameObject fireballGO = Instantiate (prefab , CastPoint , Quaternion.identity , holder) as GameObject;
             FireballProjectile projectile = fireballGO.GetComponent<FireballProjectile> ();
             float finalVelocity = velocity * speedMod;
             float finalSize = size * sizeMod;
-            projectile.Initialize (ref dirX , ref finalVelocity , ref finalSize , ref owner);
+            projectile.Initialize (castDirX , ref finalVelocity , ref finalSize , ref owner);
         }
     }
+
 }
