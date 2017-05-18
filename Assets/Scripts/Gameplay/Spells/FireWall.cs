@@ -15,7 +15,7 @@ public class FireWall : Spell {
 
     private float halfWidth;
 
-    private void OnEnable () {
+    protected override void OnEnable () {
         base.OnEnable ();
         halfWidth = prefab.GetComponent<BoxCollider2D> ().size.x / 2;
     }

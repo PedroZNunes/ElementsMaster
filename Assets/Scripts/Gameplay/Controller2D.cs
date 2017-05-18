@@ -37,7 +37,7 @@ public class Controller2D : MonoBehaviour {
 
     void Start () {
         CalculateRaySpacing ();
-        collisions.faceDirection = 1;
+        collisions.movementDirX = 1;
     }
 
     public void Move ( Vector2 moveAmount) { 
@@ -45,7 +45,7 @@ public class Controller2D : MonoBehaviour {
         collisions.Reset ();
 
         if (moveAmount.x != 0) {
-            collisions.faceDirection = (int) Mathf.Sign (moveAmount.x);
+            collisions.movementDirX = (int) Mathf.Sign (moveAmount.x);
         }
         
         HorizontalCollisions (ref moveAmount);
@@ -94,7 +94,7 @@ public class Controller2D : MonoBehaviour {
     }
 
     void HorizontalCollisions ( ref Vector2 moveAmount ) {
-        float directionX = collisions.faceDirection;
+        float directionX = collisions.movementDirX;
         float rayLength = Mathf.Abs (moveAmount.x) + SKINWIDTH;
 
         if (Mathf.Abs(moveAmount.x) < SKINWIDTH) {
@@ -186,7 +186,7 @@ public class Controller2D : MonoBehaviour {
         public bool standingOnPassThrough;
         public bool above, below;
         public bool left, right;
-        public int faceDirection;
+        public int movementDirX;
 
         public void Reset () {
             above = below = false;

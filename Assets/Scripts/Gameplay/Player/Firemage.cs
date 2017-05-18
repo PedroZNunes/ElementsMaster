@@ -13,11 +13,8 @@ public class Firemage : Mastery {
     public float projectileSpeedMod = 1f;
     public float projectileSizeMod = 1f;
 
-    private Controller2D controller;
-
 
     void Awake () {
-        controller = GetComponentInParent<Controller2D> ();
         spells.fireball = gameObject.GetComponent<Fireball> ();
         spells.fireDash = gameObject.GetComponent<FireDash> ();
         spells.conflagrate = gameObject.GetComponent<Conflagrate> ();

@@ -18,12 +18,12 @@ public class Spell : MonoBehaviour {
     [SerializeField]
     protected Vector3 castOffset;
     public Vector3 CastPoint { get; protected set; }
-    protected int castDirX;
+    protected static int castDirX = 1;
 
     protected Movement movement;
     
 
-    protected void OnEnable () {
+    protected virtual void OnEnable () {
         holder = GameObject.FindWithTag (MyTags.projectileHolder.ToString ()).transform;
         movement = GetComponentInParent<Movement> ();
         CastPoint += transform.position + castOffset;
@@ -39,19 +39,24 @@ public class Spell : MonoBehaviour {
         }
     }
 
-    protected virtual void SetCastPointAndDirection () {
-        castDirX = ( movement.isWallSliding ) ? -movement.DirX : movement.DirX;
+    protected virtual void SetCastPoint () {
+        
+        
         CastPoint = new Vector3 (transform.position.x + ( castOffset.x * castDirX ) , transform.position.y + castOffset.y);
     }
 
     public virtual void Cast ( float speed , float size , GameObject owner ) { }
     public virtual void Cast ( ) {
-        SetCastPointAndDirection ();
+        SetCastPoint ();
     }
     
     protected void Update () {
         if (isOnCooldown ()) {
             currentCD -= Time.deltaTime;
+        }
+        if (Input.GetAxisRaw("Horizontal") != 0) {
+            int direction = Mathf.RoundToInt (Input.GetAxisRaw ("Horizontal"));
+            castDirX = ( movement.isWallSliding ) ? -direction : direction;
         }
     }
 

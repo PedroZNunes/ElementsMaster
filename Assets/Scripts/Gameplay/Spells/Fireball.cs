@@ -14,7 +14,7 @@ public sealed class Fireball : Spell {
         if (CanCast ()) {
             base.Cast ();
             GameObject fireballGO = Instantiate (prefab , CastPoint , Quaternion.identity , holder) as GameObject;
-            FireballProjectile projectile = fireballGO.GetComponent<FireballProjectile> ();
+            TheFireball projectile = fireballGO.GetComponent<TheFireball> ();
             float finalVelocity = velocity * speedMod;
             float finalSize = size * sizeMod;
             projectile.Initialize (castDirX , ref finalVelocity , ref finalSize , ref owner);

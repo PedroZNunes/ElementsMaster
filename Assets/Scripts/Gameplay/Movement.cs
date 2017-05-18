@@ -12,7 +12,7 @@ public class Movement : MonoBehaviour {
     public bool isWallSliding { get; private set; }
     private int wallDirX;
 
-    public float gravity { get; private set; }
+    public static float Gravity { get; private set; }
     public Vector2 MaxSpeed {
         get { return new Vector2 (moveSpeed , jump.velocityMax); }
     }
@@ -37,18 +37,19 @@ public class Movement : MonoBehaviour {
 
     private Vector2 directionalInput;
 
-    public int DirX { get { return controller.collisions.faceDirection; } }
+    public int DirX { get { return controller.collisions.movementDirX; } }
 
     void Awake () {
         controller = GetComponent<Controller2D> ();
     }
 
     void Start () { 
+        
         CalculateGravity ();
 
         CalculateJumpVelocity ();
 
-        Debug.Log (string.Format ("Gravity: {0} | Jump Velocity: {1}" , gravity , jump.velocityMax));
+        Debug.Log (string.Format ("Gravity: {0} | Jump Velocity: {1}" , Gravity , jump.velocityMax));
     }
 
 
@@ -60,7 +61,7 @@ public class Movement : MonoBehaviour {
 
         HandleWallSlide ();
 
-        velocity.y += gravity * Time.deltaTime;
+        velocity.y += Gravity * Time.deltaTime;
         controller.Move (velocity * Time.deltaTime);
 
         if (controller.collisions.above || controller.collisions.below) {
@@ -171,16 +172,18 @@ public class Movement : MonoBehaviour {
     //jumpHeight = (gravity * timeToJumpApex^2)/2
     //Solving for gravity
     //gravity = 2*jumpHeight / timeToJumpApex^2
-    void CalculateGravity () {
-        float halfHeight = controller.collider.size.y / 2f;
-        gravity = -( 2 * ( jump.heightMax + halfHeight ) ) / Mathf.Pow (jump.timeToApex , 2);
+    private void CalculateGravity () {
+        if (Gravity == 0f && GetComponent<Player> () != null) {
+            float halfHeight = controller.collider.size.y / 2f;
+            Gravity = -( 2 * ( jump.heightMax + halfHeight ) ) / Mathf.Pow (jump.timeToApex , 2);
+        }
     }
 
     //V = V0 + at
     //jumpVelocity = gravity*timeToJumpApex
-    void CalculateJumpVelocity () {
-        jump.velocityMax = Mathf.Abs (gravity) * jump.timeToApex;
-        jump.velocityMin = Mathf.Sqrt (2 * Mathf.Abs (gravity) * jump.heightMin);
+    private void CalculateJumpVelocity () {
+        jump.velocityMax = Mathf.Abs (Gravity) * jump.timeToApex;
+        jump.velocityMin = Mathf.Sqrt (2 * Mathf.Abs (Gravity) * jump.heightMin);
     }
 
     [System.Serializable]

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 
+[RequireComponent(typeof(Collider2D))]
 public class TheFireDash : MonoBehaviour {
 
     private float duration = 0f;
@@ -27,7 +28,7 @@ public class TheFireDash : MonoBehaviour {
             currentDuration += Time.deltaTime;
             movement.Velocity = Vector2.zero;
         } else if (currentDuration < duration + delay) {
-            movement.Velocity = new Vector2 (movement.MaxSpeed.x * speedBurst * dirX, -movement.gravity * Time.deltaTime);
+            movement.Velocity = new Vector2 (movement.MaxSpeed.x * speedBurst * dirX, -Movement.Gravity * Time.deltaTime);
             currentDuration += Time.deltaTime;
         }
         else {

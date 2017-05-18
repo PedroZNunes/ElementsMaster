@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 
-public class FireballProjectile : Projectile {
+[RequireComponent(typeof(Damage), typeof (CircleCollider2D))]
+public class TheFireball : Projectile {
 
     public GameObject owner { get; private set; }
 
@@ -9,12 +10,14 @@ public class FireballProjectile : Projectile {
     private float size;
     private float maxDuration = 4f;
 
-    void OnEnable () {
-        Destroy (gameObject , maxDuration); //TODO: projectiles object pool for memory fragmentation
-    }
+    private Damage damage;
+    [SerializeField]
+    private int baseDamage;
 
-    void Awake () {
-        transform.localScale = Vector2.one * size;
+    void OnEnable () {
+        damage = GetComponent<Damage> ();
+        transform.localScale *= size;
+        Destroy (gameObject , maxDuration); //TODO: projectiles object pool for memory fragmentation
     }
 
     void Update () {
@@ -26,7 +29,8 @@ public class FireballProjectile : Projectile {
         if (col.tag == MyTags.block.ToString ()) {
             Destroy (gameObject);
         } else if (col.tag == MyTags.enemy.ToString()) {
-            Debug.LogFormat ("{0} dealt XXX dmg to enemy {1}" , name , col.name);
+            damage.DealDamage (baseDamage , col.gameObject);
+            Destroy (gameObject);
         }
     }
 
