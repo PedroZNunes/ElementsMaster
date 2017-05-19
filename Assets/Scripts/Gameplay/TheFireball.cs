@@ -7,6 +7,8 @@ public class TheFireball : Projectile {
 
     private Vector2 dir;
     private float speed;
+    private float moveAmount;
+
     private float size;
     private float maxDuration = 4f;
 
@@ -14,44 +16,56 @@ public class TheFireball : Projectile {
     [SerializeField]
     private int baseDamage;
 
+    [SerializeField]
     private ParticleSystem particles;
+    [SerializeField]
+    private ParticleSystem particlesExplosion;
 
-    void OnEnable () {
+    private CircleCollider2D col;
+
+    private void OnEnable () {
         damage = GetComponent<Damage> ();
-        particles = GetComponentInChildren<ParticleSystem> ();
-        transform.localScale *= size;
         Destroy (gameObject , maxDuration); //TODO: projectiles object pool for memory fragmentation
     }
 
-    void Update () {
+    private void Update () {
         float moveDistance = speed * Time.deltaTime;
         transform.Translate (dir * moveDistance);
     }
 
-    void OnTriggerEnter2D ( Collider2D col ) {
+    private void OnTriggerEnter2D ( Collider2D col ) {
         if (col.tag == MyTags.block.ToString ()) {
-            Destroy (gameObject);
+            ColliderDistance2D colDist = col.Distance (this.col);
+            Vector3 dist = ( colDist.pointB - colDist.pointA );
+            transform.position = transform.position - dist;
+            Explode ();
         } else if (col.tag == MyTags.enemy.ToString()) {
             damage.DealDamage (baseDamage , col.gameObject);
-            Destroy (gameObject);
+            Explode ();
         }
     }
 
-    void OnDestroy () {
-        particles.transform.SetParent (transform.parent , true);
-        ParticleSystem.Burst[] burst = { new ParticleSystem.Burst (0 , 10 , 20) };
-        particles.emission.SetBursts (burst);
+    private void Explode () {
+        GetComponent<Collider2D> ().enabled = false;
+        particles.Stop ();
+        particlesExplosion.gameObject.SetActive (true);
+        Destroy (gameObject , particlesExplosion.main.startLifetime.constantMax);
 
-        Destroy (particles, )
-        Debug.Log("FireballProjectile destroyed.");
-        //remove this projectile from lists and whatever event or i dont know yet
+        Debug.Log ("FireballProjectile destroyed.");
+        //remove this projectile from lists 
     }
-
 
     public void Initialize ( int dirX , ref float speed , ref float size , ref GameObject owner ) {
         dir = Vector2.right * dirX;
-        this.speed = speed;
-        this.size = size;
+        
         this.owner = owner;
+
+        this.size = size;
+        transform.localScale *= size;
+
+        this.speed = speed;
+        moveAmount = speed * Time.deltaTime;
+        col = GetComponent<CircleCollider2D> ();
+        col.offset = new Vector2 (moveAmount * dirX , 0f);
     }
 }

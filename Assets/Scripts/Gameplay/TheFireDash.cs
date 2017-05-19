@@ -27,8 +27,9 @@ public class TheFireDash : MonoBehaviour {
         if (currentDuration < delay) {
             currentDuration += Time.deltaTime;
             movement.Velocity = Vector2.zero;
-        } else if (currentDuration < duration + delay) {
-            movement.Velocity = new Vector2 (movement.MaxSpeed.x * speedBurst * dirX, -Movement.Gravity * Time.deltaTime);
+        }
+        else if (currentDuration < duration + delay) {
+            movement.Velocity = new Vector2 (movement.MaxSpeed.x * speedBurst * dirX , -Movement.Gravity * Time.deltaTime);
             currentDuration += Time.deltaTime;
         }
         else {
