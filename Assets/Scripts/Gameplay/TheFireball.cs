@@ -14,8 +14,11 @@ public class TheFireball : Projectile {
     [SerializeField]
     private int baseDamage;
 
+    private ParticleSystem particles;
+
     void OnEnable () {
         damage = GetComponent<Damage> ();
+        particles = GetComponentInChildren<ParticleSystem> ();
         transform.localScale *= size;
         Destroy (gameObject , maxDuration); //TODO: projectiles object pool for memory fragmentation
     }
@@ -35,6 +38,11 @@ public class TheFireball : Projectile {
     }
 
     void OnDestroy () {
+        particles.transform.SetParent (transform.parent , true);
+        ParticleSystem.Burst[] burst = { new ParticleSystem.Burst (0 , 10 , 20) };
+        particles.emission.SetBursts (burst);
+
+        Destroy (particles, )
         Debug.Log("FireballProjectile destroyed.");
         //remove this projectile from lists and whatever event or i dont know yet
     }
