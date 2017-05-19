@@ -21,6 +21,7 @@ public class Health : MonoBehaviour {
 
     public void LoseHP (int dmg) {
         CurrentHP -= Mathf.Abs(dmg);
+        CheckDeath ();
     }
 
     public void GainHP (int heal) {
@@ -29,6 +30,10 @@ public class Health : MonoBehaviour {
 
     public void CheckDeath () {
         if (currentHP <= 0) {
+            Actor actor = GetComponent<Actor> ();
+            if (actor != null) {
+                actor.Die ();
+            }
             Debug.LogFormat ("{0} is dead." , gameObject.name); 
         }
     }

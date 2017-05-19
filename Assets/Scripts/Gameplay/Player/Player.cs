@@ -44,4 +44,9 @@ public class Player : Actor {
         Debug.Log ("Player instance not set");
         return Vector3.zero;
     }
+
+    public override void Die () {
+        //in the future this might be an animation.
+        Destroy (gameObject);
+    }
 }
