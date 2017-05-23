@@ -40,8 +40,6 @@ public class Spell : MonoBehaviour {
     }
 
     protected virtual void SetCastPoint () {
-        
-        
         CastPoint = new Vector3 (transform.position.x + ( castOffset.x * castDirX ) , transform.position.y + castOffset.y);
     }
 
@@ -54,9 +52,10 @@ public class Spell : MonoBehaviour {
         if (isOnCooldown ()) {
             currentCD -= Time.deltaTime;
         }
+
         if (Input.GetAxisRaw("Horizontal") != 0) {
-            int direction = Mathf.RoundToInt (Input.GetAxisRaw ("Horizontal"));
-            castDirX = ( movement.isWallSliding ) ? -direction : direction;
+            int direction = (int) (Input.GetAxisRaw ("Horizontal"));
+            castDirX = ( movement.isWallSliding ) ? -movement.DirX : direction;
         }
     }
 

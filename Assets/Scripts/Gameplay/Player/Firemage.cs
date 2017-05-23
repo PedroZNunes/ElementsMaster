@@ -7,24 +7,19 @@ public class Firemage : Mastery {
 
     [SerializeField]
     private Transform castPoint;
-    private int previousCastDirection;
-    private int castDirection = 1;
 
     public float projectileSpeedMod = 1f;
     public float projectileSizeMod = 1f;
 
+    private Movement movement;
 
     void Awake () {
         spells.fireball = gameObject.GetComponent<Fireball> ();
         spells.fireDash = gameObject.GetComponent<FireDash> ();
         spells.conflagrate = gameObject.GetComponent<Conflagrate> ();
         spells.firewall = gameObject.GetComponent<FireWall> ();
-    }
-
-    void Update () {
-        if (Input.GetAxisRaw ("Horizontal") != 0 && Input.GetAxisRaw ("Horizontal") != castDirection) 
-            castDirection = (int) Input.GetAxisRaw ("Horizontal");
-    }
+        movement = GetComponent<Movement> ();
+}
 
     public override void Spell1 () {
         if (inGlobalCD ()) { return; }

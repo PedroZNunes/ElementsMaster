@@ -68,4 +68,5 @@ public class TheFireball : Projectile {
         col = GetComponent<CircleCollider2D> ();
         col.offset = new Vector2 (moveAmount * dirX , 0f);
     }
+
 }

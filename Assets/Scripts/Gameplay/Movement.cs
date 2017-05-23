@@ -5,6 +5,7 @@ public class Movement : MonoBehaviour {
 
     [SerializeField]
     private Jump jump;
+    public float maxJumpHeight { get { return jump.heightMax; } }
 
     [SerializeField]
     private Wall wall;
