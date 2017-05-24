@@ -6,6 +6,8 @@ public class Movement : MonoBehaviour {
     [SerializeField]
     private Jump jump;
     public float maxJumpHeight { get { return jump.heightMax; } }
+    public float minJumpVelocity { get { return jump.velocityMin; } }
+    public bool isJumping { get; private set; }
 
     [SerializeField]
     private Wall wall;
@@ -25,6 +27,9 @@ public class Movement : MonoBehaviour {
     [SerializeField]
     private float accelerationTimeGrounded = 0.1f;
 
+    public float AccelerationTimeAirBorne { get { return accelerationTimeAirBorne; } }
+    public float AccelerationTimeGrounded { get { return accelerationTimeGrounded; } }
+
     [SerializeField]
     private float rayDeactivateTime = 0.2f;
 
@@ -38,34 +43,33 @@ public class Movement : MonoBehaviour {
 
     private Vector2 directionalInput;
 
-    public int DirX { get { return controller.collisions.movementDirX; } }
+    public int DirX { get { return controller.Collisions.movementDirX; } }
 
     void Awake () {
         controller = GetComponent<Controller2D> ();
+        if (GetComponent<Player> () != null) {
+            CalculateGravity ();
+        }
     }
 
-    void Start () { 
-        
-        CalculateGravity ();
-
+    void Start () {
         CalculateJumpVelocity ();
-
         Debug.Log (string.Format ("Gravity: {0} | Jump Velocity: {1}" , Gravity , jump.velocityMax));
     }
 
 
-    void Update () {
+    void FixedUpdate () {
         isWallSliding = false;
-        wallDirX = ( controller.collisions.right ) ? 1 : -1;
+        wallDirX = ( controller.Collisions.right ) ? 1 : -1;
 
         HandleMovement ();
-
-        HandleWallSlide ();
+        if (wall.slideSpeedMax != 0)
+            HandleWallSlide ();
 
         velocity.y += Gravity * Time.deltaTime;
         controller.Move (velocity * Time.deltaTime);
 
-        if (controller.collisions.above || controller.collisions.below) {
+        if (controller.Collisions.above || controller.Collisions.below) {
             velocity.y = 0;
         }
     }
@@ -78,18 +82,18 @@ public class Movement : MonoBehaviour {
         float targetVelocityX = directionalInput.x * moveSpeed;
         float accelerationTime;
 
-        if (targetVelocityX != 0) {//if moving
-            accelerationTime = ( controller.collisions.below ) ? accelerationTimeGrounded : accelerationTimeAirBorne;
-        }
-        else { //if stoping
-            accelerationTime = ( controller.collisions.below ) ? (accelerationTimeGrounded / 2f) : (accelerationTimeAirBorne / 2f);
-        }
+        //if (targetVelocityX != 0) {//if moving
+        accelerationTime = ( controller.Collisions.below ) ? accelerationTimeGrounded : accelerationTimeAirBorne;
+        //}
+        //else { //if stoping
+        //accelerationTime = ( controller.Collisions.below ) ? (accelerationTimeGrounded / 2f) : (accelerationTimeAirBorne / 2f);
+        //}
 
         velocity.x = Mathf.SmoothDamp (velocity.x , targetVelocityX , ref smoothVelocityX , accelerationTime);
     }
 
     public void HandleWallSlide () {
-        if (( !controller.collisions.below && ( controller.collisions.left || controller.collisions.right ) && velocity.y < 0 )) {
+        if (( !controller.Collisions.below && ( controller.Collisions.left || controller.Collisions.right ) && velocity.y < 0 )) {
             isWallSliding = true;
 
             if (velocity.y < -wall.slideSpeedMax) {
@@ -113,7 +117,7 @@ public class Movement : MonoBehaviour {
     }
 
     public void HandleJump () {
-        if (directionalInput.y == -1 && controller.collisions.standingOnPassThrough) {
+        if (directionalInput.y == -1 && controller.Collisions.standingOnPassThrough) {
             HandleFallThrough ();
         }
         else {
@@ -134,7 +138,7 @@ public class Movement : MonoBehaviour {
                     velocity.y = wall.leap.y;
                 }
             }
-            else if (controller.collisions.below) {
+            else if (controller.Collisions.below) {
                 velocity.y = jump.velocityMax;
                 //StartCoroutine (TrackHeightAndLength ());
             }
@@ -174,10 +178,8 @@ public class Movement : MonoBehaviour {
     //Solving for gravity
     //gravity = 2*jumpHeight / timeToJumpApex^2
     private void CalculateGravity () {
-        if (Gravity == 0f && GetComponent<Player> () != null) {
-            float halfHeight = controller.collider.size.y / 2f;
-            Gravity = -( 2 * ( jump.heightMax + halfHeight ) ) / Mathf.Pow (jump.timeToApex , 2);
-        }
+        float halfHeight = controller.collider.size.y / 2f;
+        Gravity = -( 2 * ( jump.heightMax + halfHeight ) ) / Mathf.Pow (jump.timeToApex , 2);
     }
 
     //V = V0 + at

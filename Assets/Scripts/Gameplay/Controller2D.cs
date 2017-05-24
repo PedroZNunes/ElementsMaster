@@ -29,7 +29,9 @@ public class Controller2D : MonoBehaviour {
     public BoxCollider2D collider;
 
     private RaycastOrigins raycastOrigins;
-    public CollisionInfo collisions;
+
+    private CollisionInfo collisions;
+    public CollisionInfo Collisions { get { return collisions; } }
 
     void Awake () {
         collider = GetComponent<BoxCollider2D> ();
