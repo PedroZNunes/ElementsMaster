@@ -6,7 +6,8 @@ public class Movement : MonoBehaviour {
     [SerializeField]
     private Jump jump;
     public float maxJumpHeight { get { return jump.heightMax; } }
-    public float minJumpVelocity { get { return jump.velocityMin; } }
+    public float JumpVelocityMin { get { return jump.velocityMin; } }
+    public float JumpVelocityMax { get { return jump.velocityMax; } }
     public bool isJumping { get; private set; }
 
     [SerializeField]
@@ -16,12 +17,11 @@ public class Movement : MonoBehaviour {
     private int wallDirX;
 
     public static float Gravity { get; private set; }
-    public Vector2 MaxSpeed {
-        get { return new Vector2 (moveSpeed , jump.velocityMax); }
-    }
 
     [SerializeField]
     private float moveSpeed = 10f;
+    public float MoveSpeed { get { return moveSpeed; } }
+
     [SerializeField]
     private float accelerationTimeAirBorne = 0.4f;
     [SerializeField]

@@ -19,9 +19,11 @@ public class EnemyAI : MonoBehaviour {
     private float raySkin = 0.1f;
 
     private Vector2 targetPos;
+
+    private int dirX = 1;
     private bool isJumping;
     private bool fullLengthJump;
-
+    
     private Enemy enemy;
     private Movement movement;
     private Player player;
@@ -37,8 +39,11 @@ public class EnemyAI : MonoBehaviour {
         player = FindObjectOfType<Player> ();
     }
 
-    private void FixedUpdate () {
+    private void Update () {
         targetPos = player.transform.position;
+
+        dirX = ( targetPos.x - transform.position.x < 0f ) ? -1 : 1;
+
         RunStateBehaviour ();
     }
 
@@ -63,18 +68,10 @@ public class EnemyAI : MonoBehaviour {
 
     private void HandleChasing () {
         //running animation
-        int dirX = 1;
-        if (targetPos.x - transform.position.x < 0f) {
-            dirX = -1;
-        }
-        else {
-            dirX = 1;
-        }
+        
         // test if there's ground ahead
         if (controller.Collisions.below) {
-            Vector2 rayOrigin = ( dirX == -1 )
-                        ? new Vector2 (transform.position.x - ( col.size.x / 2 ) , transform.position.y + ( col.size.y / 2 ))
-                        : new Vector2 (transform.position.x + ( col.size.x / 2 ) , transform.position.y + ( col.size.y / 2 ));
+            Vector2 rayOrigin = new Vector2 (transform.position.x + ( ( col.size.x / 2 ) * dirX ) , transform.position.y + ( col.size.y / 2 ));
             Vector2 rayDirection = new Vector2 (2 * dirX , -1);
             float groundRayDistance = 10f;
             Debug.DrawRay (rayOrigin , rayDirection * groundRayDistance , Color.red);
@@ -87,11 +84,14 @@ public class EnemyAI : MonoBehaviour {
                 RaycastHit2D hit = Physics2D.Raycast (rayOrigin , rayDirection , rayDistance , layerMask);
                 if (hit) {
                     //something ahead. cast jumping rays
-                    if (TryJumping (hit.distance , movement.MaxSpeed.x * dirX)) {
-                        fullLengthJump = true;
-                    }
-                    else if (TryJumping (hit.distance , 0f)) {
-                        fullLengthJump = false;
+                    float step = movement.JumpVelocityMax / movement.JumpVelocityMin;
+                    for (float jumpVelocity = movement.JumpVelocityMin ; jumpVelocity <= movement.JumpVelocityMax ; jumpVelocity++) {
+                        if (movement.JumpVelocityMax - jumpVelocity < 1) {
+                            jumpVelocity = movement.JumpVelocityMax;
+                        }
+                        if (TryJumping (hit.distance , movement.MoveSpeed * dirX, jumpVelocity)) {
+                            break;
+                        }
                     }
                 }
                 movement.SetDirectionalInput (Vector2.right * dirX);
@@ -102,14 +102,19 @@ public class EnemyAI : MonoBehaviour {
             }
         }
         else {
-            if (fullLengthJump)
+            //if (fullLengthJump)
                 movement.SetDirectionalInput (Vector2.right * dirX);
-            else
-                movement.SetDirectionalInput (Vector2.zero);
+            //else
+            //    movement.SetDirectionalInput (Vector2.zero);
         }
     }
 
-    private bool TryJumping (float wallDistance, float targetVelocityX) {
+    private void OnDrawGizmos () {
+        Vector2 origin = new Vector2 (transform.position.x + ( ( col.size.x / 2 ) * dirX ) , transform.position.y - ( col.size.y / 2 ));
+        Gizmos.DrawSphere (origin , 0.1f);
+    }
+
+    private bool TryJumping ( float wallDistance , float targetVelocityX , float jumpVelocity) {
         //se wall distance < (distancia minima para conseguir um pulo sem esbarrar na parede), pule baixo e desacelerando
         if (movement.Velocity.x == 0 && targetVelocityX == 0) {
             return false;
@@ -117,11 +122,12 @@ public class EnemyAI : MonoBehaviour {
 
         bool doJump = false;
 
-        Vector2 origin = transform.position;
-        Vector2 startingVelocity = new Vector2 (movement.Velocity.x , movement.MaxSpeed.y);
+        Vector2 origin = new Vector2 (transform.position.x + ( ( col.size.x / 2 )  ) * dirX , transform.position.y - (( col.size.y / 2 ) - raySkin));
+        
+        Vector2 startingVelocity = new Vector2 (movement.Velocity.x , jumpVelocity);
         Vector2 currentVelocity = startingVelocity;
 
-        float smoothVelocityX = 0f;
+        float smoothVelocityX = startingVelocity.x;
 
         for (int rayCount = 0 ; rayCount < 100 ; rayCount++) {
             float acceleration = ( rayCount == 0 ) ? movement.AccelerationTimeGrounded : movement.AccelerationTimeAirBorne;
@@ -138,17 +144,17 @@ public class EnemyAI : MonoBehaviour {
             Debug.DrawRay (origin , direction * distance , Color.gray, 2f);
             if (hit) {
                 //testar se ele acertou subindo ou descendo.
-                if (hit.normal == Vector2.up) {
+                if ((hit.normal == Vector2.up)) {
                     doJump = true;
-                    break;
                 }
+                break;
             }
 
-            origin = origin + direction * distance;
+            origin = origin + (direction * distance);
         }
 
         if (doJump) {
-            movement.HandleJump ();
+            movement.HandleJump (jumpVelocity);
         }
 
         return doJump;
