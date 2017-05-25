@@ -145,6 +145,16 @@ public class Movement : MonoBehaviour {
         }
     }
 
+    public void HandleJump (float jumpVelocity ) {
+        if (directionalInput.y == -1 && controller.Collisions.standingOnPassThrough) {
+            HandleFallThrough ();
+        }
+
+        if (controller.Collisions.below) {
+            velocity.y = jumpVelocity;
+        }
+    }
+
     public void HandleCancelJump () {
         if (velocity.y > jump.velocityMin) {
             velocity.y = jump.velocityMin;
