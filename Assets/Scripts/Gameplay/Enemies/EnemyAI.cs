@@ -102,7 +102,7 @@ public class EnemyAI : MonoBehaviour {
                             jumpVelocity = movement.JumpVelocityMax;
                         }
 
-                        if (TryJumping (hit.distance , movement.MoveSpeed * playerDirection, jumpVelocity)) {
+                        if (TryJumping (movement.MoveSpeed * playerDirection, jumpVelocity)) {
                             movement.HandleJump (jumpVelocity);
                             break;
                         }
@@ -124,7 +124,8 @@ public class EnemyAI : MonoBehaviour {
                 RaycastHit2D hit = Physics2D.Raycast (point , rayDirection, rayDistance, layerMask);
                 if (hit) {
                     //found the block closest to the enemy. now cast ray forward to check if is it jumpable
-                    //HERE===================================================================================
+                    rayOrigin = new Vector2 (hit.collider.bounds.center.x, hit.collider.bounds.max.y); 
+                    if (TryJumping ())
                 }
                 //casta um ray do bloco mais próximo pra frente até achar alguma coisa em uma distancia maxima de 9.
                 //se ele achar, ele tenta pular.
@@ -135,7 +136,7 @@ public class EnemyAI : MonoBehaviour {
                     if (movement.JumpVelocityMax - jumpVelocity < 1) {
                         jumpVelocity = movement.JumpVelocityMax;
                     }
-                    if (TryJumping (groundHit.distance , movement.MoveSpeed * playerDirection , jumpVelocity)) {
+                    if (TryJumping (movement.MoveSpeed * playerDirection , jumpVelocity)) {
                         movement.HandleJump (jumpVelocity);
 
                         break;
@@ -146,7 +147,7 @@ public class EnemyAI : MonoBehaviour {
 
             //stuck
             if (controller.Collisions.below && controller.Collisions.right && controller.Collisions.left) {
-                if (TryJumping (0 , movement.MoveSpeed * playerDirection , movement.JumpVelocityMax)) {
+                if (TryJumping (movement.MoveSpeed * playerDirection , movement.JumpVelocityMax)) {
                     movement.HandleJump (movement.JumpVelocityMax);
                 }
             }
@@ -157,7 +158,7 @@ public class EnemyAI : MonoBehaviour {
         movement.SetDirectionalInput (Vector2.right * moveDirection);
     }
 
-    private bool TryJumping ( float wallDistance , float targetVelocityX , float jumpVelocity) {
+    private bool TryJumping (float targetVelocityX , float jumpVelocity) {
         //se wall distance < (distancia minima para conseguir um pulo sem esbarrar na parede), pule baixo e desacelerando
         if (movement.Velocity.x == 0 && targetVelocityX == 0) {
             return false;
