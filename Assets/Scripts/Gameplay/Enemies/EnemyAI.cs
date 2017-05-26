@@ -125,7 +125,7 @@ public class EnemyAI : MonoBehaviour {
                 if (hit) {
                     //found the block closest to the enemy. now cast ray forward to check if is it jumpable
                     rayOrigin = new Vector2 (hit.collider.bounds.center.x, hit.collider.bounds.max.y); 
-                    if (TryJumping ())
+                    //if (TryJumping ())
                 }
                 //casta um ray do bloco mais próximo pra frente até achar alguma coisa em uma distancia maxima de 9.
                 //se ele achar, ele tenta pular.
