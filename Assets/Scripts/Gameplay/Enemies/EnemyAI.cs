@@ -5,31 +5,42 @@ using System;
 
 public class EnemyAI : MonoBehaviour {
 
-    public enum State { Spawning, Idle, Searching, Chasing, Attacking, Dying}
+    public enum State { Spawning, Roaming, Chasing, Attacking, Dying}
     public State currentState;
 
     [SerializeField]
-    private LayerMask layerMask;
+    private LayerMask collisionLayerMask;
     [SerializeField]
-    private float aggroDistance = 20f;
+    private LayerMask aggroLayerMask;
 
     [SerializeField]
-    private float rayDistance = 5f;
+    private Vector2 aggroBoxSize;
+    [SerializeField]
+    private int checkAggroInterval = 4;
+
+    [SerializeField]
+    private float forwardRayDistance = 5f;
+    [SerializeField]
+    private float downwardRayDistance = 4.9f;
+
     private int raySpacing = 1;
-    private float raySkin = 0.1f;
+    private float raySkinWidth = 0.1f;
 
     private Vector2 targetPos;
-    
+
+    private const float minJumpDistance = 0.2f;
     private const float maxHeightJumpDistance = 0.46525f;
     private int playerDirection = 1;
     private bool isJumping;
     private bool fullLengthJump;
-    
+    private Coroutine checkingAggro;
+
     private Enemy enemy;
     private Movement movement;
     private Player player;
     private Controller2D controller;
     private BoxCollider2D col;
+
 
     private void Awake () {
         enemy = GetComponent<Enemy> ();
@@ -48,101 +59,127 @@ public class EnemyAI : MonoBehaviour {
         RunStateBehaviour ();
     }
 
+    private void OnDrawGizmos () {
+        Gizmos.DrawWireCube (transform.position , aggroBoxSize);
+    }
+
     private void HandleSpawning () {
         //spawningAnimation
+        //by the end of the animation, trigger roaming
+        Trigger (State.Roaming);
+    }
+    
+    private void HandleRoaming () {
+        //walk around
     }
 
-    private void HandleIdle () {
-        //idle animation
-    }
+    private IEnumerator CheckAggro () {
+        WaitForSeconds waitInterval = new WaitForSeconds (checkAggroInterval);
 
-    private void HandleSearching () {
-        //idle animation
-            float distance = Vector2.Distance (targetPos , transform.position);
-
-            if (Mathf.Abs (distance) < aggroDistance)  {
+        while (gameObject.activeSelf) {
+            Debug.Log ("Checking aggro.");
+            Collider2D hit = Physics2D.OverlapBox (transform.position, aggroBoxSize , 0f , aggroLayerMask);
+            if (hit != null) {
+                //if unreachable, check the player pos against the 
+                Debug.Log ("Found the player. " + hit.name);
                 Trigger (State.Chasing);
             }
-        //send to pathfinder for a path towards that location
-        //wait until it finds something.
+            else {
+                Debug.Log ("Found nothing.");
+                Trigger (State.Roaming);
+            }
+            yield return waitInterval;
+        }
     }
 
     private void HandleChasing () {
         //running animation
+
         int moveDirection = playerDirection;
         //ground is a face with normal poiting upwards
         //Dealing with Jumps
         if (controller.Collisions.below) {
             // test if there's ground ahead
-            //Casting a ray in a diagonal to check for upcoming holes. this is weird.
-            Vector2 rayOrigin = new Vector2 (transform.position.x + ( ( col.size.x / 2 ) * moveDirection ) , transform.position.y + ( col.size.y / 2 ));
-            Vector2 rayDirection = new Vector2 (2 * moveDirection , -1);
-            //float groundRayDistance = 10f;
-            //Debug.DrawRay (rayOrigin , rayDirection * groundRayDistance , Color.red);
-            //RaycastHit2D groundHit = Physics2D.OverlapPoint (transform.position , rayDirection , groundRayDistance , layerMask);
-            Vector2 pointOffset = new Vector2 (2 , -1);
-            Vector2 point = new Vector2 (transform.position.x + pointOffset.x , transform.position.y - pointOffset.y);
-            Collider2D pointCol = Physics2D.OverlapPoint (point , layerMask);
+            //I'll cast a few rays downward to check for ground ahead.
+            Vector2 rayOrigin = new Vector2 (); //= new Vector2 (transform.position.x + ( ( col.size.x / 2 ) * moveDirection ) , transform.position.y + ( col.size.y / 2 ));
+            Vector2 rayDirection = Vector2.down; // = new Vector2 (2 * moveDirection , -1);
+            rayOrigin = new Vector2 (transform.position.x + moveDirection , transform.position.y);
+            Debug.DrawRay (rayOrigin , rayDirection * downwardRayDistance , Color.yellow);
+            RaycastHit2D hit = Physics2D.Raycast (rayOrigin , rayDirection , downwardRayDistance , collisionLayerMask);
+            print (hit.distance);
+            if (hit && hit.normal == Vector2.up) {
 
-            //Can move. Ground Ahead.
-            //if (groundHit && groundHit.normal == Vector2.up) {
-            if (pointCol != null) {
-                //test if there's a block blocking the way.
-                //Casting rays forward from the center.
-                rayOrigin -= Vector2.up * ( col.size.y / 2 );
-                rayDirection = Vector2.right * moveDirection;
-                Debug.DrawRay (rayOrigin , rayDirection , Color.green);
-                RaycastHit2D hit = Physics2D.Raycast (rayOrigin , rayDirection , rayDistance , layerMask);
-                if (hit) {
-                    //Block ahead.
-                    //Trying to jump over it.
-                    for (float jumpVelocity = movement.JumpVelocityMin ; jumpVelocity <= movement.JumpVelocityMax ; jumpVelocity++) {
-                        //Making sure that he tries the max jump length
-                        if (movement.JumpVelocityMax - jumpVelocity < 1) {
-                            jumpVelocity = movement.JumpVelocityMax;
+                if (hit.distance > col.size.y) {
+                    //Hole ahead.
+                    //no ground ahead;
+                    //Check the size of the hole.
+                    //cast um ray pro lado do enemy pra ver aonde começa o bloco mais proximo.
+                    bool isJumpable = false;
+                    float jumpVelocity = 0f; //==========================================================================
+                    rayDirection = new Vector2 (-moveDirection , 0);
+                    forwardRayDistance = 2f;
+                    hit = Physics2D.Raycast (rayOrigin , rayDirection , forwardRayDistance , collisionLayerMask);
+                    if (hit) {
+                        //found the block closest to the hole. now lets try and jump it from the edge.
+                        rayOrigin = new Vector2 (hit.collider.bounds.center.x + ( hit.collider.bounds.extents.x * moveDirection ) , hit.collider.bounds.max.y);
+
+                        for (jumpVelocity = movement.JumpVelocityMin ; jumpVelocity <= movement.JumpVelocityMax ; jumpVelocity++) {
+                            if (movement.JumpVelocityMax - jumpVelocity < 1) {
+                                jumpVelocity = movement.JumpVelocityMax;
+                            }
+                            if (TryJumping (movement.MoveSpeed * moveDirection , jumpVelocity)) {
+                                isJumpable = true;
+                                break;
+                            }
                         }
-
-                        if (TryJumping (movement.MoveSpeed * playerDirection, jumpVelocity)) {
+                    }
+                    //Trying to jump over the hole
+                    if (isJumpable) {
+                        if (TryJumping (movement.MoveSpeed * playerDirection , jumpVelocity)) {
                             movement.HandleJump (jumpVelocity);
-                            break;
                         }
                     }
-                    //if he does not succeed in jumping over the block, we just move forward
-                    //We need to check if the block is too close for max height jumping
-                    if (hit.distance < maxHeightJumpDistance) {
-                        moveDirection = -playerDirection;
+                    else {
+                        Trigger (State.Roaming);
                     }
                 }
-                //no blocks ahead.
-            }
-            else {
-                //no ground ahead;
-                //Check the size of the hole.
-                //cast um ray pro lado do enemy pra ver aonde começa o bloco mais proximo.
-                rayDirection = new Vector2 (point.x - transform.position.x , 0);
-                rayDistance = 2f;
-                RaycastHit2D hit = Physics2D.Raycast (point , rayDirection, rayDistance, layerMask);
-                if (hit) {
-                    //found the block closest to the enemy. now cast ray forward to check if is it jumpable
-                    rayOrigin = new Vector2 (hit.collider.bounds.center.x, hit.collider.bounds.max.y); 
-                    //if (TryJumping ())
-                }
-                //casta um ray do bloco mais próximo pra frente até achar alguma coisa em uma distancia maxima de 9.
-                //se ele achar, ele tenta pular.
+                else {
+                    //Can move. Ground Ahead.
 
-                //Trying to jump over the hole
-                bool jumped = false;
-                for (float jumpVelocity = movement.JumpVelocityMin ; jumpVelocity <= movement.JumpVelocityMax ; jumpVelocity++) {
-                    if (movement.JumpVelocityMax - jumpVelocity < 1) {
-                        jumpVelocity = movement.JumpVelocityMax;
+                    //Casting rays forward from the center.
+                    rayOrigin = new Vector2 (transform.position.x + ( ( col.size.x / 2 ) * moveDirection ) , transform.position.y);
+                    rayDirection = Vector2.right * moveDirection;
+                    Debug.DrawRay (rayOrigin , rayDirection , Color.green);
+                    hit = Physics2D.Raycast (rayOrigin , rayDirection , forwardRayDistance , collisionLayerMask);
+                    if (hit) {
+                        //Block ahead.
+
+                        //Testing if there's enough jump space.
+                        if (hit.distance > minJumpDistance) {
+                            //Try to jump over it in all possible jump velocitys
+                            for (float jumpVelocity = movement.JumpVelocityMin ; jumpVelocity <= movement.JumpVelocityMax ; jumpVelocity++) {
+                                //Making sure that he tries the max jump velocity before giving up
+                                if (movement.JumpVelocityMax - jumpVelocity < 1) {
+                                    jumpVelocity = movement.JumpVelocityMax;
+                                }
+                                //Tries to jump at said move speed and jump velocity.
+                                if (TryJumping (movement.MoveSpeed * playerDirection , jumpVelocity)) {
+                                    movement.HandleJump (jumpVelocity);
+                                    break;
+                                }
+                            }
+                            //Currently I am not checking if the enemy was able to jump over the hole or not.
+                        }
+                        else {
+                            moveDirection = -moveDirection;
+                        }
+
                     }
-                    if (TryJumping (movement.MoveSpeed * playerDirection , jumpVelocity)) {
-                        movement.HandleJump (jumpVelocity);
-
-                        break;
+                    else {
+                        //no blocks ahead.
                     }
-                }
 
+                }
             }
 
             //stuck
@@ -166,7 +203,7 @@ public class EnemyAI : MonoBehaviour {
 
         bool doJump = false;
 
-        Vector2 origin = new Vector2 (transform.position.x + ( ( col.size.x / 2 )  ) * playerDirection , transform.position.y - (( col.size.y / 2 ) - raySkin));
+        Vector2 origin = new Vector2 (transform.position.x + ( ( col.size.x / 2 )  ) * playerDirection , transform.position.y - (( col.size.y / 2 ) - raySkinWidth));
         
         Vector2 startingVelocity = new Vector2 (movement.Velocity.x , jumpVelocity);
         Vector2 currentVelocity = startingVelocity;
@@ -184,7 +221,7 @@ public class EnemyAI : MonoBehaviour {
             Vector2 direction = currentVelocity.normalized;
             float distance = currentVelocity.magnitude * Time.fixedDeltaTime;
             
-            RaycastHit2D hit = Physics2D.Raycast (origin , direction , distance , layerMask);
+            RaycastHit2D hit = Physics2D.Raycast (origin , direction , distance , collisionLayerMask);
             Debug.DrawRay (origin , direction * distance , Color.cyan, 2f);
             if (hit) {
                 //testar se ele acertou subindo ou descendo.
@@ -218,12 +255,15 @@ public class EnemyAI : MonoBehaviour {
 
     public void Trigger (State newState ) {
         if (newState != currentState) {
+            currentState = newState;
             switch (currentState) {
                 case State.Spawning:
                     break;
-                case State.Idle:
-                    break;
-                case State.Searching:
+                case State.Roaming:
+                    if (checkingAggro != null) {
+                        StopCoroutine (checkingAggro);
+                    }
+                    checkingAggro = StartCoroutine (CheckAggro ());
                     break;
                 case State.Chasing:
                     break;
@@ -234,7 +274,8 @@ public class EnemyAI : MonoBehaviour {
                 default:
                     break;
             }
-            currentState = newState;
+            
+            Debug.Log (currentState);
         }
     }
 
@@ -243,11 +284,8 @@ public class EnemyAI : MonoBehaviour {
             case State.Spawning:
                 HandleSpawning ();
                 break;
-            case State.Idle:
-                HandleIdle ();
-                break;
-            case State.Searching:
-                HandleSearching ();
+            case State.Roaming:
+                HandleRoaming ();
                 break;
             case State.Chasing:
                 HandleChasing ();
