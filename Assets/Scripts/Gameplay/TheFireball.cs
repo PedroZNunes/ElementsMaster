@@ -51,7 +51,7 @@ public class TheFireball : Projectile {
         particlesExplosion.gameObject.SetActive (true);
         Destroy (gameObject , particlesExplosion.main.startLifetime.constantMax);
 
-        Debug.Log ("FireballProjectile destroyed.");
+        //Debug.Log ("FireballProjectile destroyed.");
         //remove this projectile from lists 
     }
 

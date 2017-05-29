@@ -124,24 +124,24 @@ public class Movement : MonoBehaviour {
         else {
             if (isWallSliding) {
                 if (wallDirX == directionalInput.x) {
-                    Debug.Log ("Climbing");
+                    //Debug.Log ("Climbing");
                     velocity.x = -wallDirX * wall.climb.x;
                     velocity.y = wall.climb.y;
                 }
                 else if (directionalInput.x == 0) {
-                    Debug.Log ("Jumping Off");
+                    //Debug.Log ("Jumping Off");
                     velocity.x = -wallDirX * wall.jumpOff.x;
                     velocity.y = wall.jumpOff.y;
                 }
                 else {
-                    Debug.Log ("Leaping Away");
+                    //Debug.Log ("Leaping Away");
                     velocity.x = -wallDirX * wall.leap.x;
                     velocity.y = wall.leap.y;
                 }
             }
             else if (controller.Collisions.below) {
                 velocity.y = jump.velocityMax;
-                StartCoroutine (TrackHeightAndLength ());
+                //StartCoroutine (TrackHeightAndLength ());
             }
         }
     }
@@ -166,22 +166,22 @@ public class Movement : MonoBehaviour {
         controller.DeactivateRays (rayDeactivateTime);
     }
 
-    ////maybe I`ll need this later
-    private IEnumerator TrackHeightAndLength () {
-        float timeCount = 0f;
-        float x1 = transform.position.x;
-        timeCount += Time.deltaTime;
-        float initialHeight = transform.position.y;
-        float currentJumpHeight = initialHeight;
-        yield return null;
-        while (!controller.Collisions.below) {
-            currentJumpHeight = transform.position.y - initialHeight;
-            timeCount += Time.deltaTime;
-            yield return null;
-        }
-        float x2 = transform.position.x;
-        print (string.Format ("Jump - Length: {0:0.000} || Duration {1:0.00000000}" , ( x2 - x1 ) , timeCount));
-    }
+    //////maybe I`ll need this later
+    //private IEnumerator TrackHeightAndLength () {
+    //    float timeCount = 0f;
+    //    float x1 = transform.position.x;
+    //    timeCount += Time.deltaTime;
+    //    float initialHeight = transform.position.y;
+    //    float currentJumpHeight = initialHeight;
+    //    yield return null;
+    //    while (!controller.Collisions.below) {
+    //        currentJumpHeight = transform.position.y - initialHeight;
+    //        timeCount += Time.deltaTime;
+    //        yield return null;
+    //    }
+    //    float x2 = transform.position.x;
+    //    print (string.Format ("Jump - Length: {0:0.000} || Duration {1:0.00000000}" , ( x2 - x1 ) , timeCount));
+    //}
 
     //deltaMovement = V0 * t + (a(t^2))/2
     //jumpHeight = (gravity * timeToJumpApex^2)/2
