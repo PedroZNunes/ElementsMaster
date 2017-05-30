@@ -26,7 +26,7 @@ public class EnemyAI : MonoBehaviour {
     private int checkAggroInterval = 4;
 
     [SerializeField]
-    private float forwardRayDistance = 5f;
+    private float forwardRayDistance = 3f;
     [SerializeField]
     private float downwardRayDistance = 4.9f;
 
@@ -192,13 +192,7 @@ public class EnemyAI : MonoBehaviour {
                 roamingState = RoamingState.Waiting;
                 break;
         }
-
-
-        //walk around
-        
     }
-
-
 
     private void HandleChasing () {
         //running animation
@@ -245,6 +239,7 @@ public class EnemyAI : MonoBehaviour {
                         }
                         else {
                             closestLandingPos = landingPos.Value;
+                            closestJumpVelocity = jumpVelocity;
                         }
                     }
                 }
@@ -273,7 +268,7 @@ public class EnemyAI : MonoBehaviour {
                     if (hit.collider.GetComponent<Block> () != null) {
                         //Block ahead.
                         //Testing if there's enough jump space.
-                        if (hit.distance > jumpDistanceMin) {
+                        if (hit.distance > jumpDistanceIdeal) {
                             //Try to jumping in different velocitys
                             Vector2? closestLandingPos = null;
                             float closestJumpVelocity = 0f;
@@ -292,6 +287,7 @@ public class EnemyAI : MonoBehaviour {
                                     }
                                     else {
                                         closestLandingPos = landingPos.Value;
+                                        closestJumpVelocity = jumpVelocity;
                                     }
                                 }
                             }
@@ -313,7 +309,7 @@ public class EnemyAI : MonoBehaviour {
                     }
                 }
                 else {
-                    //no blocks ahead.
+                    //no blocks ahead
                 }
 
             }
