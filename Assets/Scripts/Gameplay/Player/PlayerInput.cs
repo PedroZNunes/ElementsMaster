@@ -1,18 +1,19 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using System;
 
 [RequireComponent(typeof(Player))]
 public class PlayerInput : MonoBehaviour {
 
     Player player;
+    Mastery mastery;
 
-    static public event Action OnPressPause;
+    static public event Action PressPauseEvent;
+
 
 	void Awake () {
         player = GetComponent<Player> ();
-	}
+        mastery = GetComponentInChildren<Mastery> ();
+    }
 	
 	void Update () {
         RunStateMachine ();
@@ -28,6 +29,7 @@ public class PlayerInput : MonoBehaviour {
             case GameManager.States.Play:
                 CheckPause ();
                 CheckMovement ();
+                CheckActions ();
                 break;
             case GameManager.States.Win:
                 CheckMovement ();
@@ -58,10 +60,24 @@ public class PlayerInput : MonoBehaviour {
 
     void CheckPause () {
         if (Input.GetButtonDown ("Cancel")) {
-            if (OnPressPause != null) {
-                OnPressPause ();
+            if (PressPauseEvent != null) {
+                PressPauseEvent ();
             }
         }
     }
 
+    void CheckActions () {
+        if (Input.GetButtonDown ("Fire1")) {
+            mastery.Spell1 ();
+        }
+        else if (Input.GetButtonDown ("Fire2")) {
+            mastery.Spell2 ();
+        }
+        else if (Input.GetButtonDown ("Fire3")) {
+            mastery.Spell3 ();
+        }
+        else if (Input.GetButtonDown ("Fire4")) {
+            mastery.Spell4 ();
+        }
+    }
 }

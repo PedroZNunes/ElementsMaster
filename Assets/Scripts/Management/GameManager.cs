@@ -1,25 +1,26 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour {
 
     public enum States { Pause, Opening, Play, Win, Lose, Inactive }
-    static public States currentState { get; private set; }
-    public delegate void OnPauseHandler ( bool isPaused );
-    static public event OnPauseHandler OnPause; //to be used by UI
+    public static States currentState { get; private set; }
 
-    List<Objective> objectives = new List<Objective>();
+    public delegate void OnPauseHandler ( bool isPaused );
+    public static event OnPauseHandler OnPause; //to be used by UI
+
+    private List<Objective> objectives = new List<Objective>();
 	
-    static public bool isPaused { get; private set; }
+    public static bool isPaused { get; private set; }
 
     void Awake () {
         Objective.Triggered += OnObjectiveTriggered;
-        PlayerInput.OnPressPause += Pause;
+        PlayerInput.PressPauseEvent += Pause;
     }
 
     void Start () {
         //Gives the start to the whole game.
+        //later it will wait for the map to load async.
         Trigger (States.Opening);
     }
 
@@ -33,7 +34,6 @@ public class GameManager : MonoBehaviour {
         foreach (Objective obj in GameObject.FindObjectsOfType<Objective> ()) {
             objectives.Add (obj);
         }
-
         Trigger (States.Play);
     }
 

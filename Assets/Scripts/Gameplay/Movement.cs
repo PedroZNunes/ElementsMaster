@@ -1,61 +1,76 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
+using System.Collections;
 
 [RequireComponent(typeof(Controller2D))]
 public class Movement : MonoBehaviour {
 
     [SerializeField]
-    Jump jump;
-    [SerializeField]
-    Wall wall;
-
-    bool isWallSliding;
-    int wallDirX;
-    float gravity;
-    float smoothVelocityX;
+    private Jump jump;
+    public float maxJumpHeight { get { return jump.heightMax; } }
+    public float JumpVelocityMin { get { return jump.velocityMin; } }
+    public float JumpVelocityMax { get { return jump.velocityMax; } }
+    public bool isJumping { get; private set; }
 
     [SerializeField]
-    float moveSpeed;
-    [SerializeField]
-    float accelerationTimeAirBorne = 0.4f;
-    [SerializeField]
-    float accelerationTimeGrounded = 0.1f;
+    private Wall wall;
+    private float wallUnstickTime;
+    public bool isWallSliding { get; private set; }
+    private int wallDirX;
+
+    public static float Gravity { get; private set; }
 
     [SerializeField]
-    float rayDeactivateTime = 0.2f;
+    private float moveSpeed = 10f;
+    public float MoveSpeed { get { return moveSpeed; } }
 
-    float wallUnstickTime;
-    Controller2D controller;
-    Vector3 velocity;
+    [SerializeField]
+    private float accelerationTimeAirBorne = 0.4f;
+    [SerializeField]
+    private float accelerationTimeGrounded = 0.1f;
 
-    Vector2 directionalInput;
+    public float AccelerationTimeAirBorne { get { return accelerationTimeAirBorne; } }
+    public float AccelerationTimeGrounded { get { return accelerationTimeGrounded; } }
+
+    [SerializeField]
+    private float rayDeactivateTime = 0.2f;
+
+    private float smoothVelocityX;
+    private Controller2D controller;
+    private Vector3 velocity;
+    public Vector2 Velocity {
+        get { return velocity; }
+        set { velocity = new Vector3 (value.x , value.y , 0); }
+    }
+
+    private Vector2 directionalInput;
+
+    public int DirX { get { return controller.Collisions.movementDirX; } }
 
     void Awake () {
         controller = GetComponent<Controller2D> ();
+        if (GetComponent<Player> () != null) {
+            CalculateGravity ();
+        }
     }
 
-    void Start () { 
-        CalculateGravity ();
-
+    void Start () {
         CalculateJumpVelocity ();
-
-        Debug.Log (string.Format ("Gravity: {0} | Jump Velocity: {1}" , gravity , jump.velocityMax));
+        Debug.Log (string.Format ("Gravity: {0} | Jump Velocity: {1}" , Gravity , jump.velocityMax));
     }
 
 
-    void Update () {
+    void FixedUpdate () {
         isWallSliding = false;
-        wallDirX = ( controller.collisions.right ) ? 1 : -1;
+        wallDirX = ( controller.Collisions.right ) ? 1 : -1;
 
         HandleMovement ();
+        if (wall.slideSpeedMax != 0)
+            HandleWallSlide ();
 
-        HandleWallSlide ();
-
-        velocity.y += gravity * Time.deltaTime;
+        velocity.y += Gravity * Time.deltaTime;
         controller.Move (velocity * Time.deltaTime);
 
-        if (controller.collisions.above || controller.collisions.below) {
+        if (controller.Collisions.above || controller.Collisions.below) {
             velocity.y = 0;
         }
     }
@@ -68,18 +83,18 @@ public class Movement : MonoBehaviour {
         float targetVelocityX = directionalInput.x * moveSpeed;
         float accelerationTime;
 
-        if (targetVelocityX != 0) {//if moving
-            accelerationTime = ( controller.collisions.below ) ? accelerationTimeGrounded : accelerationTimeAirBorne;
-        }
-        else { //if stoping
-            accelerationTime = ( controller.collisions.below ) ? (accelerationTimeGrounded / 2f) : (accelerationTimeAirBorne / 2f);
-        }
+        //if (targetVelocityX != 0) {//if moving
+        accelerationTime = ( controller.Collisions.below ) ? accelerationTimeGrounded : accelerationTimeAirBorne;
+        //}
+        //else { //if stoping
+        //accelerationTime = ( controller.Collisions.below ) ? (accelerationTimeGrounded / 2f) : (accelerationTimeAirBorne / 2f);
+        //}
 
         velocity.x = Mathf.SmoothDamp (velocity.x , targetVelocityX , ref smoothVelocityX , accelerationTime);
     }
 
     public void HandleWallSlide () {
-        if (( !controller.collisions.below && ( controller.collisions.left || controller.collisions.right ) && velocity.y < 0 )) {
+        if (( !controller.Collisions.below && ( controller.Collisions.left || controller.Collisions.right ) && velocity.y < 0 )) {
             isWallSliding = true;
 
             if (velocity.y < -wall.slideSpeedMax) {
@@ -103,33 +118,42 @@ public class Movement : MonoBehaviour {
     }
 
     public void HandleJump () {
-        if (directionalInput.y == -1 && controller.collisions.standingOnPassThrough) {
+        if (directionalInput.y == -1 && controller.Collisions.standingOnPassThrough) {
             HandleFallThrough ();
         }
         else {
             if (isWallSliding) {
                 if (wallDirX == directionalInput.x) {
-                    Debug.Log ("Climbing");
+                    //Debug.Log ("Climbing");
                     velocity.x = -wallDirX * wall.climb.x;
                     velocity.y = wall.climb.y;
                 }
                 else if (directionalInput.x == 0) {
-                    Debug.Log ("Jumping Off");
+                    //Debug.Log ("Jumping Off");
                     velocity.x = -wallDirX * wall.jumpOff.x;
                     velocity.y = wall.jumpOff.y;
                 }
                 else {
-                    Debug.Log ("Leaping Away");
+                    //Debug.Log ("Leaping Away");
                     velocity.x = -wallDirX * wall.leap.x;
                     velocity.y = wall.leap.y;
                 }
             }
-            else if (controller.collisions.below) {
+            else if (controller.Collisions.below) {
                 velocity.y = jump.velocityMax;
-                StartCoroutine (CountJumpLength ());
+                //StartCoroutine (TrackHeightAndLength ());
             }
         }
+    }
 
+    public void HandleJump (float jumpVelocity ) {
+        if (directionalInput.y == -1 && controller.Collisions.standingOnPassThrough) {
+            HandleFallThrough ();
+        }
+
+        if (controller.Collisions.below) {
+            velocity.y = jumpVelocity;
+        }
     }
 
     public void HandleCancelJump () {
@@ -142,33 +166,37 @@ public class Movement : MonoBehaviour {
         controller.DeactivateRays (rayDeactivateTime);
     }
 
-    IEnumerator CountJumpLength () {
-        float timeCount = 0f;
-        float x1 = transform.position.x;
-        timeCount += Time.deltaTime;
-        yield return null;
-        while (!controller.collisions.below) {
-            timeCount += Time.deltaTime;
-            yield return null;
-        }
-        float x2 = transform.position.x;
-        print (string.Format("Jump - Length: {0:0.000} || Duration {1:0.000}", ( x2 - x1 ),timeCount));
-    }
+    //////maybe I`ll need this later
+    //private IEnumerator TrackHeightAndLength () {
+    //    float timeCount = 0f;
+    //    float x1 = transform.position.x;
+    //    timeCount += Time.deltaTime;
+    //    float initialHeight = transform.position.y;
+    //    float currentJumpHeight = initialHeight;
+    //    yield return null;
+    //    while (!controller.Collisions.below) {
+    //        currentJumpHeight = transform.position.y - initialHeight;
+    //        timeCount += Time.deltaTime;
+    //        yield return null;
+    //    }
+    //    float x2 = transform.position.x;
+    //    print (string.Format ("Jump - Length: {0:0.000} || Duration {1:0.00000000}" , ( x2 - x1 ) , timeCount));
+    //}
 
     //deltaMovement = V0 * t + (a(t^2))/2
     //jumpHeight = (gravity * timeToJumpApex^2)/2
     //Solving for gravity
     //gravity = 2*jumpHeight / timeToJumpApex^2
-    void CalculateGravity () {
+    private void CalculateGravity () {
         float halfHeight = controller.collider.size.y / 2f;
-        gravity = -( 2 * ( jump.heightMax + halfHeight ) ) / Mathf.Pow (jump.timeToApex , 2);
+        Gravity = -( 2 * ( jump.heightMax + halfHeight ) ) / Mathf.Pow (jump.timeToApex , 2);
     }
 
     //V = V0 + at
     //jumpVelocity = gravity*timeToJumpApex
-    void CalculateJumpVelocity () {
-        jump.velocityMax = Mathf.Abs (gravity) * jump.timeToApex;
-        jump.velocityMin = Mathf.Sqrt (2 * Mathf.Abs (gravity) * jump.heightMin);
+    private void CalculateJumpVelocity () {
+        jump.velocityMax = Mathf.Abs (Gravity) * jump.timeToApex;
+        jump.velocityMin = Mathf.Sqrt (2 * Mathf.Abs (Gravity) * jump.heightMin);
     }
 
     [System.Serializable]
@@ -188,6 +216,4 @@ public class Movement : MonoBehaviour {
         public Vector2 jumpOff, leap, climb;
         public float slideSpeedMax;
     }
-
-
 }

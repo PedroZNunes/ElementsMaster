@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using System;
 
 public class OnCollisionEventArgs : EventArgs {
@@ -14,23 +12,26 @@ public class Controller2D : MonoBehaviour {
 
     public event EventHandler<OnCollisionEventArgs> OnCollision;
 
-    const float SKINWIDTH = 0.015f;
-    const float distanceBetweenRays = 0.25f;
+    private const float SKINWIDTH = 0.015f;
+    private const float distanceBetweenRays = 0.25f;
 
-    int horizontalRayCount;
-    int verticalRayCount;
+    private int horizontalRayCount;
+    private int verticalRayCount;
 
-    float horizontalRaySpacing;
-    float verticalRaySpacing;
+    private float horizontalRaySpacing;
+    private float verticalRaySpacing;
 
-    bool raysDeactivated = false;
+    private bool raysDeactivated = false;
 
     [SerializeField]
-    LayerMask collisionMask;
+    private LayerMask collisionMask;
     [HideInInspector]
     public BoxCollider2D collider;
-    RaycastOrigins raycastOrigins;
-    public CollisionInfo collisions;
+
+    private RaycastOrigins raycastOrigins;
+
+    private CollisionInfo collisions;
+    public CollisionInfo Collisions { get { return collisions; } }
 
     void Awake () {
         collider = GetComponent<BoxCollider2D> ();
@@ -38,7 +39,7 @@ public class Controller2D : MonoBehaviour {
 
     void Start () {
         CalculateRaySpacing ();
-        collisions.faceDirection = 1;
+        collisions.movementDirX = 1;
     }
 
     public void Move ( Vector2 moveAmount) { 
@@ -46,7 +47,7 @@ public class Controller2D : MonoBehaviour {
         collisions.Reset ();
 
         if (moveAmount.x != 0) {
-            collisions.faceDirection = (int) Mathf.Sign (moveAmount.x);
+            collisions.movementDirX = (int) Mathf.Sign (moveAmount.x);
         }
         
         HorizontalCollisions (ref moveAmount);
@@ -95,7 +96,7 @@ public class Controller2D : MonoBehaviour {
     }
 
     void HorizontalCollisions ( ref Vector2 moveAmount ) {
-        float directionX = collisions.faceDirection;
+        float directionX = collisions.movementDirX;
         float rayLength = Mathf.Abs (moveAmount.x) + SKINWIDTH;
 
         if (Mathf.Abs(moveAmount.x) < SKINWIDTH) {
@@ -187,7 +188,7 @@ public class Controller2D : MonoBehaviour {
         public bool standingOnPassThrough;
         public bool above, below;
         public bool left, right;
-        public int faceDirection;
+        public int movementDirX;
 
         public void Reset () {
             above = below = false;

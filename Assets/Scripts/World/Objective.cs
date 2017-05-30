@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using System;
 
 public class ObjectiveTriggeredEventArgs : EventArgs {
@@ -9,18 +7,15 @@ public class ObjectiveTriggeredEventArgs : EventArgs {
 
 public class Objective : MonoBehaviour {
 
-    [SerializeField]
-    Color notTriggeredColor, triggeredColor;
-    
     public static event EventHandler<ObjectiveTriggeredEventArgs> Triggered;
-
     public bool isEnabled = false;
 
-    bool isTriggered = false;
+    [SerializeField]
+    private Color notTriggeredColor, triggeredColor;
+    
+    private bool isTriggered = false;
     public bool IsTriggered {
-        get {
-            return isTriggered;
-        }
+        get { return isTriggered; }
         set {
             isTriggered = value;
             ChangeMaterialColor ();
