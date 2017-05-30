@@ -5,27 +5,38 @@ using UnityEngine;
 public sealed class EnemySpawner : MonoBehaviour {
 
     [SerializeField]
-    private LayerMask obstacleCollisionMask;
-    [SerializeField]
-    private List<GameObject> enemyPrefabs = new List<GameObject> ();
-    [SerializeField]
-    private float spawnIntervalBase;    //the interval should be based on the difficulty per second that the game gets.
-                                //allowing for faster spawns later. It should not spawn always at the same interval, though.
-    [SerializeField]
-    private string holderName = "Enemies";
-    private Transform enemyHolder;
+    private GameObject[] prefabs;
+    private Transform holder;
 
+    [SerializeField]
+    private int interval;
+    [SerializeField]
+    private int intervalOffset;
+    private WaitForSeconds intervalInSeconds;
+
+    private List<GameObject> pool; //talvez uma array. talvez uma lista. talvez uma lista ordenada. talvez um dictionary com key difficulty.
+    //a quantidade de cada inimigo na pool vai indicar qual a chance de tal inimigo ser spawnado. a pool controla a quantidade.
+    //diferentes pools vao ser usadas para cada inimigo.
+    //na hora de escolher de qual pool pegar o proximo inimigo, ele olha no count da pool quando faz o random. assim a maior pool vai sempre ter maior chance de spawnar mobs.
+
+    private int poolActiveCount;
+
+    [SerializeField]
+    private int difficultyTarget; //difficulty target sera estipulada por um sistema de balanceamento. futuramente.
+    
     private Coroutine spawningCoroutine;
 
-    private List<Vector2> coordinatesUsed = new List<Vector2> ();
 
     void Awake () {
-        enemyHolder = new GameObject (holderName).transform;
+        holder = this.transform;
+        /* instanciar um numero poolCount de vezes o inimigo referente aquela pool.
+         * aqui todos os inimigos devem ser instanciados e desativados para futuro uso durante o jogo.
+         */
     }
 
     public void StartSpawning () {
         if (spawningCoroutine == null) {
-            spawningCoroutine = StartCoroutine (SpawningProcess (spawnIntervalBase));
+            spawningCoroutine = StartCoroutine (Spawn ());
         }
     }
 
@@ -35,14 +46,49 @@ public sealed class EnemySpawner : MonoBehaviour {
         }
     }
 
-    IEnumerator SpawningProcess (float spawnInterval) {
-        while (true) {
-            Spawn ();
-            yield return new WaitForSeconds (spawnInterval);
-        }
+    private IEnumerator Spawn () {
+        int difficultyCurrent;
+        int difficultyDifference;
+        /* A cada currentInterval segundos esse spawner vai olhar pra pool 
+         * pegar cada difficulty de cada inimigo ativo e somar. comparar esse resultado com a dificuldade target.
+         * a sobra vai ser a difficulty difference. ela vai servir pra decidir qual inimigo spawnar na proxima wave.
+         * ele entao vai chamar um metodo para spawnar a wave e passar como parametro a dificuldade de diferença.
+         */
+        yield return intervalInSeconds;
     }
 
-    GameObject SelectEnemyToSpawn () {
+    private IEnumerator SpawnWave ( int difficultyRemaining ) {
+        /* Ele vai receber a dificuldade que falta para chegar ao alvo.
+         * Ele manda 
+         * Faz um loop na POOL de inimigos consultando a dificuldade de cada um. compara então essa dificuldade com a restante. 
+         * a ordem do loop vai ser aleatória. se o mob puder ser spawnado, ele será. como a pool possui mais inimigos faceis do que dificeis,
+         * ele vai spawnar esses com mais frequencia. e quanto mais inimigos dificeis, menor a chance de spawnar outro. isso evita que tenha apenas inimigos dificeis de uma só vez.
+         * após escolher o inimigo, ele chama um metodo que acha uma plataforma viável para spawnar o inimigo.
+         * tendo o inimigo e a plataforma, eh soh inicializar o inimigo desejado usando a referencia da pool
+         * a inicialização vai ser feita igual as spells sao castadas, porem será bem completa para evitar lixo de memória.
+         * inicializa, move, ativa.
+         */
+
+        //estimate which enemy should spawn
+        GameObject toInstantiate = SelectEnemyToSpawn ();
+        if (toInstantiate == null) {
+            Debug.Log ("Not enough difficulty to spawn an enemy. Spawn aborted.");
+            return;
+        }
+        //choose a platform. this should be closer than the end of the screen + offset
+        Vector2 pos = PickPlatform ();
+        //spawn enemy under the holder;
+        GameObject enemy = Instantiate (toInstantiate , pos , Quaternion.identity , holder);
+        //recursive to allow multiple spawns
+        if (n > 0) {
+            Spawn (n - 1);
+        }
+
+
+        yield return null;
+    }
+
+    private GameObject SelectEnemyToSpawn () {
         //Count how many enemies are on the screen
         Enemy[] enemy = FindObjectsOfType<Enemy> ();
         for (int i = 0 ; i < enemy.Length; i++) {
@@ -64,29 +110,13 @@ public sealed class EnemySpawner : MonoBehaviour {
         return null;    //if there are no enemies to spawn, return nothing;
     }
 
-    void Spawn () {
-        Spawn (1);
+    private void SpawnEnemy () {
+
     }
 
-    void Spawn ( int n ) {
-        if (n == 0) { return; }
-        //estimate which enemy should spawn
-        GameObject toInstantiate = SelectEnemyToSpawn ();
-        if (toInstantiate == null) {
-            Debug.Log ("Not enough difficulty to spawn an enemy. Spawn aborted.");
-            return;
-        }
-        //choose a platform. this should be closer than the end of the screen + offset
-        Vector2 pos = PickPlatform ();
-        //spawn enemy under the holder;
-        GameObject enemy = Instantiate(toInstantiate, pos , Quaternion.identity, enemyHolder);
-        //recursive to allow multiple spawns
-        if (n > 0) {
-            Spawn (n - 1);
-        }
-    }
 
-    Vector2 PickPlatform () {
+
+    private Vector2 PickPlatform () {
         //player position and camera size and offset will determine the zone in which the enemy can spawn
         Vector2 playerPos = Player.GetPosition ();
         Vector2 areaOffset = new Vector2 (Camera.main.orthographicSize * Camera.main.aspect, Camera.main.orthographicSize);
