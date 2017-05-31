@@ -14,14 +14,19 @@ public class Enemy : Actor {
     private int difficulty;
     public int Difficulty { get { return difficulty; } }
 
-    void Awake () {
+
+    public void Initialize ( Vector2 position ) {
         controller = GetComponent<Controller2D> ();
         movement = GetComponent<Movement> ();
+
         health = GetComponent<Health> ();
+        health.FillHP ();
+
+        //set position
     }
 
     public override void Die () {
         //in the future this might be an animation.
-        Destroy (gameObject);
+        gameObject.SetActive (false);
     }
 }

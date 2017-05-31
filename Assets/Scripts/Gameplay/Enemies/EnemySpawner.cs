@@ -50,7 +50,7 @@ public sealed class EnemySpawner : MonoBehaviour {
             StartSpawning ();
         }
         if (oldState == GameManager.States.Play) {
-            StopSpawning();
+            StopSpawning ();
         }
     }
 
@@ -70,20 +70,22 @@ public sealed class EnemySpawner : MonoBehaviour {
     /// calculates difficulty difference and calls a method to spawn the wave passing the difference as parameter.
     /// </summary>
     private IEnumerator Spawn () {
-        WaitForSeconds intervalInSeconds = new WaitForSeconds (Random.Range (waveInterval.Min , waveInterval.Max));
+        while (true) {
+            WaitForSeconds intervalInSeconds = new WaitForSeconds (Random.Range (waveInterval.Min , waveInterval.Max));
 
-        int difficultyCurrent = 0;
-        foreach (Pool pool in pools) {
-            difficultyCurrent += pool.ActiveDifficulty ();
+            int difficultyCurrent = 0;
+            foreach (Pool pool in pools) {
+                difficultyCurrent += pool.ActiveDifficulty ();
+            }
+
+            int difficultyDifference = difficultyTarget - difficultyCurrent;
+            Debug.Log ("Difficulty Difference: " + difficultyDifference);
+            if (difficultyDifference > waveDifficultyMin) {
+                StartCoroutine (SpawnWave (difficultyDifference));
+            }
+
+            yield return intervalInSeconds;
         }
-
-        int difficultyDifference = difficultyTarget - difficultyCurrent;
-        Debug.Log ("Difficulty Difference: " + difficultyDifference);
-        if (difficultyDifference > waveDifficultyMin) {
-            StartCoroutine (SpawnWave (difficultyDifference));
-        }
-
-        yield return intervalInSeconds;
     }
 
     /// <SpawnWaveSummary>
@@ -92,17 +94,24 @@ public sealed class EnemySpawner : MonoBehaviour {
     /// loops thrugh the list of enemies to be spawned calling another method to initialize and activate each one
     /// </SpawnWaveSummary>
     private IEnumerator SpawnWave ( int difficultyRemaining ) {
-
         Queue<GameObject> toSpawn = ChooseEnemiesToSpawn (ref difficultyRemaining);
 
         float waveTotalDuration = Random.Range (waveDuration.Min , waveDuration.Max);
         float subWaveInterval = waveTotalDuration / toSpawn.Count;
         float subWaveIntervalOffset = 0.3f;
+
         while (toSpawn.Count > 0) {
             WaitForSeconds wfs = new WaitForSeconds (Random.Range (subWaveInterval - subWaveIntervalOffset, subWaveInterval + subWaveIntervalOffset));
             //spawn enemy
             Debug.LogFormat ("{0} spawned. t: {1}." , toSpawn.Peek ().name, Time.time);
             GameObject spawned = toSpawn.Dequeue ();
+            Enemy e = spawned.GetComponent<Enemy> ();
+            if (e!= null) {
+                e.Initialize (Vector2.zero);
+            }
+            else {
+                Debug.LogError ("Enemy component not found. spawned: " + spawned.GetInstanceID());
+            }
             spawned.SetActive (true);
             yield return wfs;
         }

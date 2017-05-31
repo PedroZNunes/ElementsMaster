@@ -55,7 +55,7 @@ public class Movement : MonoBehaviour {
 
     void Start () {
         CalculateJumpVelocity ();
-        Debug.Log (string.Format ("Gravity: {0} | Jump Velocity: {1}" , Gravity , jump.velocityMax));
+        //Debug.Log (string.Format ("Gravity: {0} | Jump Velocity: {1}" , Gravity , jump.velocityMax));
     }
 
 
