@@ -10,8 +10,9 @@ public class Enemy : Actor {
     public Movement movement;
     private Health health;
 
-  
-    public int difficulty;
+    [SerializeField]
+    private int difficulty;
+    public int Difficulty { get { return difficulty; } }
 
     void Awake () {
         controller = GetComponent<Controller2D> ();

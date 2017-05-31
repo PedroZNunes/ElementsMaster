@@ -98,7 +98,7 @@ public class EnemyAI : MonoBehaviour {
                 Trigger (State.Roaming);
             }
         }
-        Debug.LogFormat ("Tried to jump. Success? {0}. count: {1}. t: {2}" , isSuccessful , tryJumpCount , Time.time);
+        //Debug.LogFormat ("Tried to jump. Success? {0}. count: {1}. t: {2}" , isSuccessful , tryJumpCount , Time.time);
     }
 
     private IEnumerator CheckAggro () {
