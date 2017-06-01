@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class Spell : MonoBehaviour {
 
@@ -65,6 +66,63 @@ public class Spell : MonoBehaviour {
 
     void OnDrawGizmos () {
         Gizmos.DrawSphere (CastPoint , 0.25f);
+    }
+
+
+    [Serializable]
+    public class Pool {
+        [SerializeField]
+        private int size;
+        [SerializeField]
+        private GameObject prefab;
+
+        public int Size { get { return size; } }
+        public GameObject Prefab { get { return prefab; } }
+
+        [HideInInspector]
+        public GameObject[] instances;
+
+        private Transform holder;
+
+        //Can be made into a coroutine for performance purposes.
+        public void Initialize ( Transform holder ) {
+            this.holder = holder;
+
+            instances = new GameObject[size];
+            for (int i = 0 ; i < size ; i++) {
+                instances[i] = Instantiate (prefab , holder);
+                instances[i].SetActive (false);
+            }
+        }
+
+        public int CountActive () {
+            int n = 0;
+            for (int i = 0 ; i < instances.Length ; i++) {
+                if (instances[i].activeInHierarchy) {
+                    n++;
+                }
+            }
+            return n;
+        }
+
+        public int CountInactive () {
+            int n = 0;
+            for (int i = 0 ; i < instances.Length ; i++) {
+                if (!instances[i].activeInHierarchy) {
+                    n++;
+                }
+            }
+            return n;
+        }
+
+        public GameObject FindFreeObject () {
+            for (int i = 0 ; i < instances.Length ; i++) {
+                if (!instances[i].activeInHierarchy) {
+                    return instances[i];
+                }
+            }
+            return null;
+        }
     }
 
 }

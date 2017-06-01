@@ -1,12 +1,9 @@
 ﻿using UnityEngine;
 
-[RequireComponent (typeof(Fireball), typeof (FireDash))]
+[RequireComponent (typeof(Fireball), typeof (FireDash), typeof(FireWall))]
 public class Firemage : Mastery {
 
     private Spells spells;
-
-    [SerializeField]
-    private Transform castPoint;
 
     public float projectileSpeedMod = 1f;
     public float projectileSizeMod = 1f;

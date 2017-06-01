@@ -1,23 +1,38 @@
 ﻿using UnityEngine;
 
-public sealed class Fireball : Spell {
 
+public sealed class Fireball : Spell {
     [SerializeField]
-    private Object prefab;
+    private Pool pool;
 
     [SerializeField]
     private float velocity = 15f;
 
-    private float size = 1f;
-    
+    private Vector2 size = Vector2.one;
+
+    [SerializeField]
+    private float maxDuration = 4f;
+
+
+    protected override void OnEnable () {
+        base.OnEnable ();
+
+        holder = GameObject.FindGameObjectWithTag (MyTags.projectileHolder.ToString ()).transform;
+        pool.Initialize (holder);
+    }
+
     public override void Cast ( float speedMod , float sizeMod , GameObject owner ) {
         if (CanCast ()) {
             base.Cast ();
-            GameObject fireballGO = Instantiate (prefab , CastPoint , Quaternion.identity , holder) as GameObject;
-            TheFireball projectile = fireballGO.GetComponent<TheFireball> ();
-            float finalVelocity = velocity * speedMod;
-            float finalSize = size * sizeMod;
-            projectile.Initialize (castDirX , ref finalVelocity , ref finalSize , ref owner);
+            GameObject go = pool.FindFreeObject ();
+            if (go == null) { Debug.LogWarningFormat ("The pool does not have a free {0}" , this.name); }
+            else {
+                TheFireball theFireball = go.GetComponent<TheFireball> ();
+
+                float velocityFinal = velocity * speedMod;
+                Vector2 sizeFinal = size * sizeMod;
+                theFireball.Initialize (castDirX , CastPoint , ref velocityFinal , ref sizeFinal , ref maxDuration , ref owner);
+            }
         }
     }
 
