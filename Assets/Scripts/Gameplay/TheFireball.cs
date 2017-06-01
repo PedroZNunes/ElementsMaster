@@ -50,15 +50,18 @@ public class TheFireball : Projectile {
         transform.Translate (dir * moveDistance);
     }
 
-    private void OnTriggerEnter2D ( Collider2D col ) {
-        if (col.tag == MyTags.block.ToString ()) {
-            ColliderDistance2D colDist = col.Distance (this.col);
-            Vector3 dist = ( colDist.pointB - colDist.pointA );
-            transform.position = transform.position - dist;
-            Explode ();
-        } else if (col.tag == MyTags.enemy.ToString()) {
-            damage.DealDamage (baseDamage , col.gameObject);
-            Explode ();
+    private void OnTriggerEnter2D ( Collider2D otherCollider ) {
+        if (col.enabled) {
+            if (otherCollider.tag == MyTags.block.ToString ()) {
+                ColliderDistance2D colDist = otherCollider.Distance (col);
+                Vector3 dist = ( colDist.pointB - colDist.pointA );
+                transform.position = transform.position - dist;
+                Explode ();
+            }
+            else if (otherCollider.tag == MyTags.enemy.ToString ()) {
+                damage.DealDamage (baseDamage , col.gameObject);
+                Explode ();
+            }
         }
     }
 
@@ -66,7 +69,6 @@ public class TheFireball : Projectile {
         col.enabled = false; 
         particles.Stop ();
         particlesExplosion.gameObject.SetActive (true);
-        //Destroy (gameObject , particlesExplosion.main.startLifetime.constantMax);
         StartCoroutine (Die (particlesExplosion.main.startLifetime.constantMax));
     }
 

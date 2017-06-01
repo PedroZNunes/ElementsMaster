@@ -16,6 +16,4 @@ public class Damage : MonoBehaviour {
         targetHP.LoseHP (damage);
         return true;
     }
-
-
 }

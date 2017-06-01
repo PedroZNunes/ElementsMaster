@@ -116,15 +116,14 @@ public class EnemyAI : MonoBehaviour {
         WaitForSeconds waitInterval = new WaitForSeconds (checkAggroInterval);
 
         while (gameObject.activeSelf) {
-            Debug.LogFormat ("Checking aggro. t: {0}" , Time.time);
             Collider2D hit = Physics2D.OverlapBox (transform.position , aggroBoxSize , 0f , aggroLayerMask);
             if (hit != null) {
                 //if unreachable, check the player pos against the 
-                Debug.Log ("Found the player. " + hit.name);
+                //Debug.LogFormat ("{0} checking aggro. Found the player. t: {1}" , gameObject.name, Time.time);
                 Trigger (State.Chasing);
             }
             else {
-                Debug.Log ("Found nothing.");
+                //Debug.LogFormat ("{0} checking aggro. Found nothing. t: {1}" , gameObject.name , Time.time);
                 Trigger (State.Roaming);
             }
             yield return waitInterval;
@@ -414,7 +413,7 @@ public class EnemyAI : MonoBehaviour {
                 default:
                     break;
             }
-            Debug.Log (currentState);
+            //Debug.Log (currentState);
         }
     }
 
