@@ -6,6 +6,9 @@ using Random = UnityEngine.Random;
 
 public sealed class EnemySpawner : MonoBehaviour {
 
+    private HashSet<Collider2D> availableColliders = new HashSet<Collider2D> ();
+    public HashSet<Collider2D> AvailableColliders { get { return availableColliders; } }
+
     [SerializeField]
     private Range waveInterval;
     [SerializeField]
@@ -19,18 +22,27 @@ public sealed class EnemySpawner : MonoBehaviour {
     //diferentes pools vao ser usadas para cada inimigo.
     //na hora de escolher de qual pool pegar o proximo inimigo, ele olha no size da pool quando faz o random. assim a maior pool vai sempre ter maior chance de spawnar mobs.
     [SerializeField]
-    private Pool[] pools; 
+    private Pool[] pools;
+    [SerializeField]
+    private Vector2 spawningAreaSize;
 
     [SerializeField]
     private int difficultyTarget; //difficulty target sera estipulada por um sistema de balanceamento futuramente.
     private int difficultyMin;
 
+    [SerializeField]
+    private LayerMask obstacleLayerMask;
+
     private Transform holder;
+    private PolygonCollider2D col;
     private Coroutine spawningCoroutine;
-
-
+    private Player player;
+    
     void Awake () {
-        holder = this.transform;
+        GameObject holderGO = (GameObject) Instantiate (new GameObject () , transform.parent);
+        holder = holderGO.transform;
+        col = GetComponent<PolygonCollider2D> ();
+        player = FindObjectOfType<Player> ();
         // Filling the pools
         /* instanciar um numero poolCount de vezes o inimigo referente aquela pool.
          * aqui todos os inimigos devem ser instanciados e desativados para futuro uso durante o jogo.
@@ -39,7 +51,9 @@ public sealed class EnemySpawner : MonoBehaviour {
             pools[i].Initialize (holder);
             difficultyMin = ( pools[i].Difficulty < difficultyMin ) ? pools[i].Difficulty : difficultyMin;
         }
-        
+        float before = Time.realtimeSinceStartup;
+        MapPlatforms ();
+        Debug.LogFormat ("Map platforms consumed {0} seconds.", Time.realtimeSinceStartup - before);
     }
 
     private void OnEnable () { GameManager.stateChangedEvent += OnStateChanged; }
@@ -95,7 +109,6 @@ public sealed class EnemySpawner : MonoBehaviour {
     /// </SpawnWaveSummary>
     private IEnumerator SpawnWave ( int difficultyRemaining ) {
         Queue<GameObject> toSpawn = ChooseEnemiesToSpawn (ref difficultyRemaining);
-
         float waveTotalDuration = Random.Range (waveDuration.Min , waveDuration.Max);
         float subWaveInterval = waveTotalDuration / toSpawn.Count;
         float subWaveIntervalOffset = 0.3f;
@@ -103,16 +116,17 @@ public sealed class EnemySpawner : MonoBehaviour {
         while (toSpawn.Count > 0) {
             WaitForSeconds wfs = new WaitForSeconds (Random.Range (subWaveInterval - subWaveIntervalOffset, subWaveInterval + subWaveIntervalOffset));
             //spawn enemy
-            Debug.LogFormat ("{0} spawned. t: {1}." , toSpawn.Peek ().name, Time.time);
+            Vector2 spawnPos = PickPlatform ();
+            //Debug.LogFormat ("{0} spawned. t: {1}." , toSpawn.Peek ().name, Time.time);
             GameObject spawned = toSpawn.Dequeue ();
             Enemy e = spawned.GetComponent<Enemy> ();
             if (e!= null) {
-                e.Initialize (Vector2.zero);
+                e.Initialize (spawnPos);
             }
             else {
                 Debug.LogError ("Enemy component not found. spawned: " + spawned.GetInstanceID());
             }
-            spawned.SetActive (true);
+            
             yield return wfs;
         }
     }
@@ -164,36 +178,43 @@ public sealed class EnemySpawner : MonoBehaviour {
         return toSpawn;
     }
 
-    //private void SpawnEnemy () {
+    private void MapPlatforms () {
+        float distance = 0.5f;
+        ContactFilter2D filter = new ContactFilter2D ();
+        filter.SetLayerMask (obstacleLayerMask);
+        List<Collider2D> colList = new List<Collider2D> ();
+        Collider2D[] allBlocks = new Collider2D[4000];
+        RaycastHit2D[] hit = new RaycastHit2D[1];
+        col.OverlapCollider (filter , allBlocks);
+        
+        foreach (Collider2D c in allBlocks) {
+            if (c == null) {
+                continue;
+            }
 
-    //}
+            int n = c.Raycast (Vector2.up , filter , hit , distance);
+            if (n == 0) {
+                availableColliders.Add (c);
+                continue;
+            }
+        }
 
-    //private Vector2 PickPlatform () {
-    //    //player position and camera size and offset will determine the zone in which the enemy can spawn
-    //    Vector2 playerPos = Player.GetPosition ();
-    //    Vector2 areaOffset = new Vector2 (Camera.main.orthographicSize * Camera.main.aspect, Camera.main.orthographicSize);
-    //    Vector2 minBound = playerPos - ( areaOffset );
-    //    Vector2 maxBound = playerPos + ( areaOffset );
+        Debug.LogFormat ("Mapping finished. {0} available colliders for spawning", AvailableColliders.Count);
+    }
 
-    //    //check for random X and Y and see if that is above a platform? 100% random
-    //    Vector2 randomCoordinates = new Vector2 ();
-    //    randomCoordinates.x = Random.Range (minBound.x , maxBound.x);
-    //    randomCoordinates.y = Random.Range (minBound.y , maxBound.y);
-    //    if (coordinatesUsed.Contains (randomCoordinates)) {
-    //        return PickPlatform ();
-    //    }
+    private Vector2 PickPlatform () {
+        Vector2 origin = player.transform.position;
+        List<Collider2D> cols = new List<Collider2D> (Physics2D.OverlapCapsuleAll (origin , spawningAreaSize , CapsuleDirection2D.Horizontal , 0));
+        for (int i = 0 ; i < cols.Count ; i++) {
+            int index = Random.Range (0 , cols.Count - 1);
+            if (AvailableColliders.Contains (cols[index])) {
+                return new Vector2 (cols[index].bounds.center.x , cols[index].bounds.max.y);
+            }
+        }
+        return Vector2.zero;
+    }
 
-    //    float halfEnemyHeight = 0.5f; //this is not right. FIXME: all enemies should have the same distance from the center to the ground of 0.5f (I THINK) however this cant be hardcoded here
-    //    RaycastHit2D hit = Physics2D.Raycast (randomCoordinates , Vector2.down , halfEnemyHeight , obstacleCollisionMask);
-    //    if (hit) {
-    //        return randomCoordinates;
-    //    }
-    //    else {
-    //        coordinatesUsed.Add (randomCoordinates);
-    //        return PickPlatform ();
-    //    }
-    //    //check the platformlist for the X and Y 
-    //}
+
 
     [Serializable]
     public class Pool {

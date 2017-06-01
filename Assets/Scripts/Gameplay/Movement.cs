@@ -18,6 +18,7 @@ public class Movement : MonoBehaviour {
     private int wallDirX;
 
     public static float Gravity { get; private set; }
+    public bool affectedByGravity = true;
 
     [SerializeField]
     private float moveSpeed = 10f;
@@ -67,7 +68,10 @@ public class Movement : MonoBehaviour {
         if (wall.slideSpeedMax != 0)
             HandleWallSlide ();
 
-        velocity.y += Gravity * Time.deltaTime;
+        if (affectedByGravity) {
+            velocity.y += Gravity * Time.deltaTime;
+        }
+
         controller.Move (velocity * Time.deltaTime);
 
         if (controller.Collisions.above || controller.Collisions.below) {
