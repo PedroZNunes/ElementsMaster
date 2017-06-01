@@ -24,6 +24,7 @@ public class EnemyAI : MonoBehaviour {
     private Vector2 aggroBoxSize;
     [SerializeField]
     private int checkAggroInterval = 4;
+    private Coroutine checkAggro;
 
     [SerializeField]
     private float forwardRayDistance = 3f;
@@ -67,8 +68,18 @@ public class EnemyAI : MonoBehaviour {
         player = FindObjectOfType<Player> ();
 
         OnTryJumpEvent += OnTryJump;
+    }
 
-        StartCoroutine (CheckAggro ());
+    public void StartCheckingAggro () {
+        if (checkAggro == null) {
+            StartCoroutine (CheckAggro ());
+        }
+    }
+
+    public void StopCheckingAggro () {
+        if (checkAggro != null) {
+            StopCoroutine (checkAggro);
+        }
     }
 
     private void Update () {
@@ -98,7 +109,7 @@ public class EnemyAI : MonoBehaviour {
                 Trigger (State.Roaming);
             }
         }
-        Debug.LogFormat ("Tried to jump. Success? {0}. count: {1}. t: {2}" , isSuccessful , tryJumpCount , Time.time);
+        //Debug.LogFormat ("Tried to jump. Success? {0}. count: {1}. t: {2}" , isSuccessful , tryJumpCount , Time.time);
     }
 
     private IEnumerator CheckAggro () {

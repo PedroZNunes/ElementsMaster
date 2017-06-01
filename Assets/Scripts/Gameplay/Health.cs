@@ -28,6 +28,10 @@ public class Health : MonoBehaviour {
         CurrentHP += Mathf.Abs(heal);
     }
 
+    public void FillHP () {
+        currentHP = maxHP;
+    }
+
     public void CheckDeath () {
         if (currentHP <= 0) {
             Actor actor = GetComponent<Actor> ();

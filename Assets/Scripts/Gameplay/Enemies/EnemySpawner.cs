@@ -1,31 +1,76 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
+using Random = UnityEngine.Random;
 
 public sealed class EnemySpawner : MonoBehaviour {
 
-    [SerializeField]
-    private LayerMask obstacleCollisionMask;
-    [SerializeField]
-    private List<GameObject> enemyPrefabs = new List<GameObject> ();
-    [SerializeField]
-    private float spawnIntervalBase;    //the interval should be based on the difficulty per second that the game gets.
-                                //allowing for faster spawns later. It should not spawn always at the same interval, though.
-    [SerializeField]
-    private string holderName = "Enemies";
-    private Transform enemyHolder;
+    private HashSet<Collider2D> availableColliders = new HashSet<Collider2D> ();
+    public HashSet<Collider2D> AvailableColliders { get { return availableColliders; } }
 
+    [SerializeField]
+    private Range waveInterval;
+    [SerializeField]
+    private Range waveDuration;
+    [SerializeField]
+    private int waveDifficultyMin;
+
+    private WaitForSeconds intervalInSeconds;
+    
+    //a quantidade de cada inimigo na pool vai indicar qual a chance de tal inimigo ser spawnado. a pool controla a quantidade.
+    //diferentes pools vao ser usadas para cada inimigo.
+    //na hora de escolher de qual pool pegar o proximo inimigo, ele olha no size da pool quando faz o random. assim a maior pool vai sempre ter maior chance de spawnar mobs.
+    [SerializeField]
+    private Pool[] pools;
+    [SerializeField]
+    private Vector2 spawningAreaSize;
+
+    [SerializeField]
+    private int difficultyTarget; //difficulty target sera estipulada por um sistema de balanceamento futuramente.
+    private int difficultyMin;
+
+    [SerializeField]
+    private LayerMask obstacleLayerMask;
+
+    private Transform holder;
+    private PolygonCollider2D col;
     private Coroutine spawningCoroutine;
-
-    private List<Vector2> coordinatesUsed = new List<Vector2> ();
-
+    private Player player;
+    
     void Awake () {
-        enemyHolder = new GameObject (holderName).transform;
+        GameObject holderGO = (GameObject) Instantiate (new GameObject () , transform.parent);
+        holder = holderGO.transform;
+        col = GetComponent<PolygonCollider2D> ();
+        player = FindObjectOfType<Player> ();
+        // Filling the pools
+        /* instanciar um numero poolCount de vezes o inimigo referente aquela pool.
+         * aqui todos os inimigos devem ser instanciados e desativados para futuro uso durante o jogo.
+         */
+        for (int i = 0 ; i < pools.Length ; i++) {
+            pools[i].Initialize (holder);
+            difficultyMin = ( pools[i].Difficulty < difficultyMin ) ? pools[i].Difficulty : difficultyMin;
+        }
+        float before = Time.realtimeSinceStartup;
+        MapPlatforms ();
+        Debug.LogFormat ("Map platforms consumed {0} seconds.", Time.realtimeSinceStartup - before);
+    }
+
+    private void OnEnable () { GameManager.stateChangedEvent += OnStateChanged; }
+    private void OnDisable () { GameManager.stateChangedEvent -= OnStateChanged; }
+
+    private void OnStateChanged (GameManager.States oldState, GameManager.States newState) {
+        if (newState == GameManager.States.Play) {
+            StartSpawning ();
+        }
+        if (oldState == GameManager.States.Play) {
+            StopSpawning ();
+        }
     }
 
     public void StartSpawning () {
         if (spawningCoroutine == null) {
-            spawningCoroutine = StartCoroutine (SpawningProcess (spawnIntervalBase));
+            spawningCoroutine = StartCoroutine (Spawn ());
         }
     }
 
@@ -35,81 +80,214 @@ public sealed class EnemySpawner : MonoBehaviour {
         }
     }
 
-    IEnumerator SpawningProcess (float spawnInterval) {
+    /// <summary>
+    /// calculates difficulty difference and calls a method to spawn the wave passing the difference as parameter.
+    /// </summary>
+    private IEnumerator Spawn () {
         while (true) {
-            Spawn ();
-            yield return new WaitForSeconds (spawnInterval);
-        }
-    }
+            WaitForSeconds intervalInSeconds = new WaitForSeconds (Random.Range (waveInterval.Min , waveInterval.Max));
 
-    GameObject SelectEnemyToSpawn () {
-        //Count how many enemies are on the screen
-        Enemy[] enemy = FindObjectsOfType<Enemy> ();
-        for (int i = 0 ; i < enemy.Length; i++) {
-            if (enemy[i].gameObject.CompareTag (MyTags.enemy.ToString ())){
-                //count the amount of medium creeps
-                //ps. this could be done in a dictionary<Enemy, EnemyCount>. fill up the dictionary every frame
+            int difficultyCurrent = 0;
+            foreach (Pool pool in pools) {
+                difficultyCurrent += pool.ActiveDifficulty ();
             }
-            //TODO: sum up the difficultys in a variable
+
+            int difficultyDifference = difficultyTarget - difficultyCurrent;
+            Debug.Log ("Difficulty Difference: " + difficultyDifference);
+            if (difficultyDifference > waveDifficultyMin) {
+                StartCoroutine (SpawnWave (difficultyDifference));
+            }
+
+            yield return intervalInSeconds;
         }
+    }
+
+    /// <SpawnWaveSummary>
+    /// receives the difficulty remaining, calls a method to pick random enemies to be spawned according to the difficulty remaining in the wave.
+    /// then calls a method to pick a platform for the enemy to be spawned on
+    /// loops thrugh the list of enemies to be spawned calling another method to initialize and activate each one
+    /// </SpawnWaveSummary>
+    private IEnumerator SpawnWave ( int difficultyRemaining ) {
+        Queue<GameObject> toSpawn = ChooseEnemiesToSpawn (ref difficultyRemaining);
+        float waveTotalDuration = Random.Range (waveDuration.Min , waveDuration.Max);
+        float subWaveInterval = waveTotalDuration / toSpawn.Count;
+        float subWaveIntervalOffset = 0.3f;
+
+        while (toSpawn.Count > 0) {
+            WaitForSeconds wfs = new WaitForSeconds (Random.Range (subWaveInterval - subWaveIntervalOffset, subWaveInterval + subWaveIntervalOffset));
+            //spawn enemy
+            Vector2 spawnPos = PickPlatform ();
+            //Debug.LogFormat ("{0} spawned. t: {1}." , toSpawn.Peek ().name, Time.time);
+            GameObject spawned = toSpawn.Dequeue ();
+            Enemy e = spawned.GetComponent<Enemy> ();
+            if (e!= null) {
+                e.Initialize (spawnPos);
+            }
+            else {
+                Debug.LogError ("Enemy component not found. spawned: " + spawned.GetInstanceID());
+            }
+            
+            yield return wfs;
+        }
+    }
+
+    /// <ChooseEnemiesToSpawn>
+    /// randomly picks an enemy with difficulty below the remain
+    /// adds the enemy to the list if the pool has available enemies
+    /// </ChooseEnemiesToSpawn>
+    /// <param name="difficultyRemaining"> difference between current and target difficulty </param>
+    /// <returns>
+    /// a list of objects to spawn in the wave in arbitrary order
+    /// </returns>
+    private Queue<GameObject> ChooseEnemiesToSpawn ( ref int difficultyRemaining ) {
         
+        Queue<GameObject> toSpawn = new Queue<GameObject> ();
+        while (difficultyRemaining > difficultyMin) {
+            List<Pool> poolsAvailable = new List<Pool> ();
+            int enemiesTotal = 0;
+
+            foreach (Pool pool in pools) {
+                if (pool.Difficulty <= difficultyRemaining) {
+                    poolsAvailable.Add (pool);
+                    enemiesTotal += pool.Size;
+                }
+            }
+
+            if (enemiesTotal == 0) {
+                return new Queue<GameObject> ();
+            }
+
+            //pick enemies
+            int index = Random.Range (0 , enemiesTotal - 1);
+            foreach (Pool pool in poolsAvailable) {
+                if (pool.Size <= index) {
+                    index -= pool.Size;
+                }
+                else {
+                    GameObject go = (GameObject) pool.instances.GetValue (index);
+                    if (go != null) {
+                        if (!go.activeInHierarchy && !toSpawn.Contains(go)) {
+                            difficultyRemaining -= pool.Difficulty;
+                            toSpawn.Enqueue (go);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return toSpawn;
+    }
+
+    private void MapPlatforms () {
+        float distance = 0.5f;
+        ContactFilter2D filter = new ContactFilter2D ();
+        filter.SetLayerMask (obstacleLayerMask);
+        List<Collider2D> colList = new List<Collider2D> ();
+        Collider2D[] allBlocks = new Collider2D[4000];
+        RaycastHit2D[] hit = new RaycastHit2D[1];
+        col.OverlapCollider (filter , allBlocks);
         
-        //loop the enemies at random until there are no enemies to test
-        //if (currentDifficulty + enemyDifficulty <= maxDifficulty)
-        //return the prefab
-        //else if (currentDifficulty + enemyDifficulty < minDifficulty)
-        //loop next
+        foreach (Collider2D c in allBlocks) {
+            if (c == null) {
+                continue;
+            }
 
+            int n = c.Raycast (Vector2.up , filter , hit , distance);
+            if (n == 0) {
+                availableColliders.Add (c);
+                continue;
+            }
+        }
 
-        return null;    //if there are no enemies to spawn, return nothing;
+        Debug.LogFormat ("Mapping finished. {0} available colliders for spawning", AvailableColliders.Count);
     }
 
-    void Spawn () {
-        Spawn (1);
+    private Vector2 PickPlatform () {
+        Vector2 origin = player.transform.position;
+        List<Collider2D> cols = new List<Collider2D> (Physics2D.OverlapCapsuleAll (origin , spawningAreaSize , CapsuleDirection2D.Horizontal , 0));
+        for (int i = 0 ; i < cols.Count ; i++) {
+            int index = Random.Range (0 , cols.Count - 1);
+            if (AvailableColliders.Contains (cols[index])) {
+                return new Vector2 (cols[index].bounds.center.x , cols[index].bounds.max.y);
+            }
+        }
+        return Vector2.zero;
     }
 
-    void Spawn ( int n ) {
-        if (n == 0) { return; }
-        //estimate which enemy should spawn
-        GameObject toInstantiate = SelectEnemyToSpawn ();
-        if (toInstantiate == null) {
-            Debug.Log ("Not enough difficulty to spawn an enemy. Spawn aborted.");
-            return;
+
+
+    [Serializable]
+    public class Pool {
+        [SerializeField]
+        private int difficulty;
+        [SerializeField]
+        private int size;
+        [SerializeField]
+        private GameObject prefab;
+
+        public int Difficulty { get { return difficulty; } }
+        public int Size { get { return size; } }
+        public GameObject Prefab { get { return prefab; } }
+
+        [HideInInspector]
+        public GameObject[] instances;
+
+        private Transform holder;
+
+        //Can be made into a coroutine for performance purposes.
+        public void Initialize (Transform holder) {
+            this.holder = holder;
+
+            instances = new GameObject[size];
+            for (int i = 0 ; i < size ; i++) {
+                instances[i] = Instantiate (prefab , holder);
+                instances[i].SetActive (false);
+            }
         }
-        //choose a platform. this should be closer than the end of the screen + offset
-        Vector2 pos = PickPlatform ();
-        //spawn enemy under the holder;
-        GameObject enemy = Instantiate(toInstantiate, pos , Quaternion.identity, enemyHolder);
-        //recursive to allow multiple spawns
-        if (n > 0) {
-            Spawn (n - 1);
+
+        public int CountActive () {
+            int n = 0;
+            for (int i = 0 ; i < instances.Length ; i++) {
+                if (instances[i].activeInHierarchy) {
+                    n++;
+                }
+            }
+            return n;
+        }
+
+        public int CountInactive () {
+            int n = 0;
+            for (int i = 0 ; i < instances.Length ; i++) {
+                if (!instances[i].activeInHierarchy) {
+                    n++;
+                }
+            }
+            return n;
+        }
+
+        public int ActiveDifficulty () {
+            int n = 0;
+            for (int i = 0 ; i < instances.Length ; i++) {
+                if (instances[i].activeInHierarchy) {
+                    n+= difficulty;
+                }
+            }
+            return n;
         }
     }
 
-    Vector2 PickPlatform () {
-        //player position and camera size and offset will determine the zone in which the enemy can spawn
-        Vector2 playerPos = Player.GetPosition ();
-        Vector2 areaOffset = new Vector2 (Camera.main.orthographicSize * Camera.main.aspect, Camera.main.orthographicSize);
-        Vector2 minBound = playerPos - ( areaOffset );
-        Vector2 maxBound = playerPos + ( areaOffset );
+    [Serializable]
+    public struct Range {
+        [SerializeField]
+        private int min;
+        public int Min { get { return min; } }
+        [SerializeField]
+        private int max;
+        public int Max { get { return max; } }
 
-        //check for random X and Y and see if that is above a platform? 100% random
-        Vector2 randomCoordinates = new Vector2 ();
-        randomCoordinates.x = Random.Range (minBound.x , maxBound.x);
-        randomCoordinates.y = Random.Range (minBound.y , maxBound.y);
-        if (coordinatesUsed.Contains (randomCoordinates)) {
-            return PickPlatform ();
+        public Range ( int min , int max ) {
+            this.min = min;
+            this.max = max;
         }
-
-        float halfEnemyHeight = 0.5f; //this is not right. FIXME: all enemies should have the same distance from the center to the ground of 0.5f (I THINK) however this cant be hardcoded here
-        RaycastHit2D hit = Physics2D.Raycast (randomCoordinates , Vector2.down , halfEnemyHeight , obstacleCollisionMask);
-        if (hit) {
-            return randomCoordinates;
-        }
-        else {
-            coordinatesUsed.Add (randomCoordinates);
-            return PickPlatform ();
-        }
-        //check the platformlist for the X and Y 
     }
 }

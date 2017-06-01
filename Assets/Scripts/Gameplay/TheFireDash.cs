@@ -24,17 +24,19 @@ public class TheFireDash : MonoBehaviour {
     }
 
     void Update () {
+        movement.affectedByGravity = false;
         if (currentDuration < delay) {
             currentDuration += Time.deltaTime;
             movement.Velocity = Vector2.zero;
         }
         else if (currentDuration < duration + delay) {
-            movement.Velocity = new Vector2 (movement.MoveSpeed * speedBurst * dirX , -Movement.Gravity * Time.deltaTime);
+            movement.Velocity = new Vector2 (movement.MoveSpeed * speedBurst * dirX , 0);
             currentDuration += Time.deltaTime;
         }
         else {
             currentDuration = 0f;
             movement.Velocity /= 2;
+            movement.affectedByGravity = true;
             gameObject.SetActive (false);
         }
     }

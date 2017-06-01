@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class GameManager : MonoBehaviour {
 
@@ -9,6 +10,9 @@ public class GameManager : MonoBehaviour {
     public delegate void OnPauseHandler ( bool isPaused );
     public static event OnPauseHandler OnPause; //to be used by UI
 
+    public delegate void OnStateChangedHandler ( States previousState, States newState );
+    public static event OnStateChangedHandler stateChangedEvent;
+    
     private List<Objective> objectives = new List<Objective>();
 	
     public static bool isPaused { get; private set; }
@@ -70,11 +74,16 @@ public class GameManager : MonoBehaviour {
         }
     }
 
-    void Trigger (States stateToTrigger ) {
-        if (stateToTrigger != currentState) {
-            currentState = stateToTrigger;
+    void Trigger (States newState ) {
+        if (newState != currentState) {
 
-            switch (stateToTrigger) {
+            if (stateChangedEvent != null) {
+                stateChangedEvent (currentState , newState);
+            }
+
+            currentState = newState;
+
+            switch (newState) {
                 case States.Pause:
                     Debug.Log ("Triggered Pause");
                     break;
@@ -98,6 +107,7 @@ public class GameManager : MonoBehaviour {
                 default:
                     break;
             }
+            
         }
     }
 
