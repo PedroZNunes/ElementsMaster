@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
+/// <summary>
+/// parent of all spells. deals with global cd, cast point and direction
+/// </summary>
 public class Spell : MonoBehaviour {
 
     [SerializeField]
-    protected float globalCD;
+    protected float globalCD; //interval of time when the player cannot cast any sort of spells.
     public float GlobalCD { get { return globalCD; } protected set { globalCD = value; } }
 
     [SerializeField]
@@ -17,9 +20,9 @@ public class Spell : MonoBehaviour {
     protected static Transform holder;
 
     [SerializeField]
-    protected Vector3 castOffset;
+    protected Vector3 castOffset; //distance from the player position where the spell should be cast from
     public Vector3 CastPoint { get; protected set; }
-    protected static int castDirX = 1;
+    protected static int castDirX = 1; //spell cast direction
 
     protected Movement movement;
     
@@ -30,9 +33,24 @@ public class Spell : MonoBehaviour {
         CastPoint += transform.position + castOffset;
     }
 
+    protected void Update () {
+        if (isOnCooldown ()) {
+            currentCD -= Time.deltaTime;
+        }
+
+        if (Input.GetAxisRaw ("Horizontal") != 0) {
+            int direction = (int) ( Input.GetAxisRaw ("Horizontal") );
+            castDirX = ( movement.isWallSliding ) ? -movement.DirX : direction;
+        }
+    }
+
+    /// <summary>
+    /// tests the global cooldown and local cooldown to see if the player is allowed to cast spells
+    /// </summary>
+    /// <returns>true if the player can cast spells </returns>
     protected virtual bool CanCast () {
         if (isOnCooldown ()) {
-            Debug.LogFormat ("Spell on cooldown. {0:0.0}s" , currentCD);
+            Debug.LogFormat ("Spell on cooldown. {0:0.000}s" , currentCD);
             return false;
         } else {
             currentCD = baseCD;
@@ -44,31 +62,18 @@ public class Spell : MonoBehaviour {
         CastPoint = new Vector3 (transform.position.x + ( castOffset.x * castDirX ) , transform.position.y + castOffset.y);
     }
 
-    public virtual void Cast ( float speed , float size , GameObject owner ) { }
+    public virtual void Cast ( float speed , float size ) { }
     public virtual void Cast ( ) {
         SetCastPoint ();
-    }
-    
-    protected void Update () {
-        if (isOnCooldown ()) {
-            currentCD -= Time.deltaTime;
-        }
-
-        if (Input.GetAxisRaw("Horizontal") != 0) {
-            int direction = (int) (Input.GetAxisRaw ("Horizontal"));
-            castDirX = ( movement.isWallSliding ) ? -movement.DirX : direction;
-        }
     }
 
     public bool isOnCooldown () {
         return ( currentCD > 0 );
     }
 
-    void OnDrawGizmos () {
-        Gizmos.DrawSphere (CastPoint , 0.25f);
-    }
-
-
+    /// <summary>
+    /// pool of objects from which to take spells that might have many instances.
+    /// </summary>
     [Serializable]
     public class Pool {
         [SerializeField]

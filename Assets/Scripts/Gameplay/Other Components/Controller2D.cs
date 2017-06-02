@@ -1,16 +1,14 @@
 ﻿using UnityEngine;
 using System;
 
-public class OnCollisionEventArgs : EventArgs {
-    public GameObject source;
-    public GameObject target;
-}
-
-
+/// <summary>
+/// Replaces the rigidbody component. deals with collisions using raycast
+/// </summary>
 [RequireComponent(typeof(BoxCollider2D))]
 public class Controller2D : MonoBehaviour {
 
-    public event EventHandler<OnCollisionEventArgs> OnCollision;
+    public delegate void OnCollisionEventHandler (GameObject source, GameObject target);
+    public event OnCollisionEventHandler OnCollision;
 
     private const float SKINWIDTH = 0.015f;
     private const float distanceBetweenRays = 0.25f;
@@ -33,11 +31,11 @@ public class Controller2D : MonoBehaviour {
     private CollisionInfo collisions;
     public CollisionInfo Collisions { get { return collisions; } }
 
-    void Awake () {
+    private void Awake () {
         collider = GetComponent<BoxCollider2D> ();
     }
 
-    void Start () {
+    private void Start () {
         CalculateRaySpacing ();
         collisions.movementDirX = 1;
     }
@@ -63,11 +61,11 @@ public class Controller2D : MonoBehaviour {
         Invoke ("ResetRays" , time);
     }
 
-    void ResetRays () {
+    private void ResetRays () {
         raysDeactivated = false;
     }
 
-    void VerticalCollisions ( ref Vector2 moveAmount ) {
+    private void VerticalCollisions ( ref Vector2 moveAmount ) {
         float directionY = Mathf.Sign (moveAmount.y);
         float rayLength = Mathf.Abs (moveAmount.y) + SKINWIDTH;
 
@@ -95,7 +93,7 @@ public class Controller2D : MonoBehaviour {
         }
     }
 
-    void HorizontalCollisions ( ref Vector2 moveAmount ) {
+    private void HorizontalCollisions ( ref Vector2 moveAmount ) {
         float directionX = collisions.movementDirX;
         float rayLength = Mathf.Abs (moveAmount.x) + SKINWIDTH;
 
@@ -127,8 +125,7 @@ public class Controller2D : MonoBehaviour {
         }
     }
 
-
-    void UpdateRaycastOrigins () {
+    private void UpdateRaycastOrigins () {
         Bounds bounds = collider.bounds;
         bounds.Expand (SKINWIDTH * -2);
 
@@ -138,7 +135,7 @@ public class Controller2D : MonoBehaviour {
         raycastOrigins.topRight = new Vector2 (bounds.max.x , bounds.max.y);
     }
 
-    void CalculateRaySpacing () {
+    private void CalculateRaySpacing () {
         Bounds bounds = collider.bounds;
         bounds.Expand (SKINWIDTH * -2);
 
@@ -155,7 +152,7 @@ public class Controller2D : MonoBehaviour {
         verticalRaySpacing = boundsWidth / ( verticalRayCount - 1 );
     }
 
-    bool HandleHorizontalCollisions (RaycastHit2D hit) {
+    private bool HandleHorizontalCollisions (RaycastHit2D hit) {
         if (hit.collider.isTrigger) {
             return false;
         }
@@ -167,7 +164,7 @@ public class Controller2D : MonoBehaviour {
         return true;
     }
 
-    bool HandleVerticalCollisions (RaycastHit2D hit, float directionY ) {
+    private bool HandleVerticalCollisions (RaycastHit2D hit, float directionY ) {
         if (hit.collider.isTrigger) {
             return false;
         }
@@ -197,7 +194,7 @@ public class Controller2D : MonoBehaviour {
         }
     }
 
-    struct RaycastOrigins {
+    private struct RaycastOrigins {
         public Vector2 topLeft, topRight;
         public Vector2 bottomLeft, bottomRight;
     }

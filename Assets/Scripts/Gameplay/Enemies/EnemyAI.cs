@@ -4,6 +4,7 @@ using UnityEngine;
 using System;
 using Random = UnityEngine.Random;
 
+[RequireComponent (typeof (Enemy))]
 public class EnemyAI : MonoBehaviour {
 
     public enum State { Spawning, Roaming, Chasing, Attacking, Dying}
@@ -13,44 +14,43 @@ public class EnemyAI : MonoBehaviour {
     private RoamingState roamingState;
 
     private delegate void OnTryJumpHandler ( bool isSuccessful);
-    private event OnTryJumpHandler OnTryJumpEvent; //to be used by UI
+    private event OnTryJumpHandler OnTryJumpEvent;
 
     [SerializeField]
-    private LayerMask collisionLayerMask;
+    private LayerMask collisionLayerMask; //layer that trigger the collision
     [SerializeField]
-    private LayerMask aggroLayerMask;
-
-    [SerializeField]
-    private Vector2 aggroBoxSize;
-    [SerializeField]
-    private int checkAggroInterval = 4;
-    private Coroutine checkAggro;
+    private LayerMask aggroLayerMask; //layers that trigger the aggro
 
     [SerializeField]
-    private float forwardRayDistance = 3f;
+    private Vector2 aggroBoxSize; //the size of the box used to find targets
     [SerializeField]
-    private float downwardRayDistance = 4.9f;
-
-    private const float groundRayOffsetX = 0.9f;
-    private int raySpacing = 1;
-    private float raySkinWidth = 0.1f;
-
-    private Vector2 targetPos;
-
-    private const float jumpDistanceMin = 0.2f;
-    private const float jumpDistanceIdeal = 0.46525f;
-    private const int tryJumpMaxCount = 5;
-    private int tryJumpCount = 0;
-    private const float jumpResetTimeMax = 2f;
-    private float jumpResetTimer = 0f;
+    private int checkAggroInterval = 4; //interval between checking if that is anything to chase.
+    private Coroutine checkAggro; //the coroutine responsible for checking the aggro
 
     [SerializeField]
-    private DelayTime roamingDelay;
-    private float currentRoamingDelay;
-    private float currentRoamingTime = 0f;
-    private float roamingRandomSeed = 0f;
+    private float forwardRayDistance = 3f; //length of the ray being cast forward to find either the player or an obstacle
+    [SerializeField]
+    private float downwardRayDistance = 4.9f; //length of the ray responsible for findind the ground ahead.
 
-    private int playerDirection = 1;
+    private const float groundRayOffsetX = 0.9f; //distance between the ground ray and the enemy
+    private const float raySkinWidth = 0.015f; //used to compensate the collision system. a ray cast forward from below the enemy cant collide with the ground.
+
+    private Vector2 targetPos; 
+    private const int bentRayMaxcount = 50; //max number of rays to be used on bent rays for prediction.
+    private const float jumpDistanceMin = 0.2f; //minimum jump distance 
+    private const float jumpDistanceIdeal = 0.46525f; //ideal jumping distance for having a full height jump
+    private const int tryJumpMaxCount = 5; //max number of jumps to be tried before giving up
+    private int tryJumpCount = 0; //current jump count
+    private const float jumpResetTimeMax = 2f; //time to reset the jump count max
+    private float jumpResetTimer = 0f; //current time to reset the jump count max
+
+    [SerializeField]
+    private DelayTime roamingDelay; //for how much time does it walk and for how much time does it wait
+    private float currentRoamingDelay; //current delay (after random)
+    private float currentRoamingTime = 0f; 
+    private float roamingRandomSeed = 0f; //used to determine which way to walk when roaming randomly
+
+    private int playerDirection = 1; //direction in X where the player should be 
     
     private Enemy enemy;
     private Movement movement;
@@ -94,11 +94,10 @@ public class EnemyAI : MonoBehaviour {
         Gizmos.DrawWireCube (transform.position , aggroBoxSize);
     }
 
-    private void ResetJumpTimer () {
-        jumpResetTimer = 0f;
-        tryJumpCount = 0;
-    }
-
+    /// <summary>
+    /// responsible for avoiding that the enemy tries to jump forever. it resets after a couple of tries.
+    /// </summary>
+    /// <param name="isSuccessful">did it jump successfully</param>
     private void OnTryJump (bool isSuccessful ) {
         if (isSuccessful) {
             tryJumpCount = 0;
@@ -112,13 +111,20 @@ public class EnemyAI : MonoBehaviour {
         //Debug.LogFormat ("Tried to jump. Success? {0}. count: {1}. t: {2}" , isSuccessful , tryJumpCount , Time.time);
     }
 
+    private void ResetJumpTimer () {
+        jumpResetTimer = 0f;
+        tryJumpCount = 0;
+    }
+
+    /// <summary>
+    /// tries to find the player every couple of seconds (checkAggroInterval)
+    /// </summary>
     private IEnumerator CheckAggro () {
         WaitForSeconds waitInterval = new WaitForSeconds (checkAggroInterval);
 
         while (gameObject.activeSelf) {
             Collider2D hit = Physics2D.OverlapBox (transform.position , aggroBoxSize , 0f , aggroLayerMask);
             if (hit != null) {
-                //if unreachable, check the player pos against the 
                 //Debug.LogFormat ("{0} checking aggro. Found the player. t: {1}" , gameObject.name, Time.time);
                 Trigger (State.Chasing);
             }
@@ -136,6 +142,9 @@ public class EnemyAI : MonoBehaviour {
         Trigger (State.Roaming);
     }
     
+    /// <summary>
+    /// roams around every couple of seconds.
+    /// </summary>
     private void HandleRoaming () {
 
         currentRoamingTime += Time.deltaTime;
@@ -204,6 +213,9 @@ public class EnemyAI : MonoBehaviour {
         }
     }
 
+    /// <summary>
+    /// chases the player shooting bent rays to predict how physics will affect it. 
+    /// </summary>
     private void HandleChasing () {
         //running animation
         jumpResetTimer += Time.deltaTime;
@@ -226,7 +238,6 @@ public class EnemyAI : MonoBehaviour {
             if (hit.distance > (col.size.y / 2) + raySkinWidth || !hit || hit.normal != Vector2.up) {
                 //no ground ahead;
                 //Trying to jump over the hole
-
                 Vector2? closestLandingPos = null;
                 float closestJumpVelocity = 0f;
                 for (float jumpVelocity = 0 ; jumpVelocity <= movement.JumpVelocityMax ; jumpVelocity++) {
@@ -337,6 +348,12 @@ public class EnemyAI : MonoBehaviour {
         movement.SetDirectionalInput (Vector2.right * moveDirection);
     }
 
+    /// <summary>
+    /// casts a bunch of rays in sequence to have a prediction of the physics.
+    /// </summary>
+    /// <param name="targetVelocityX"></param>
+    /// <param name="jumpVelocity"></param>
+    /// <returns> a nullable vector2 representing the position where the ray lands (if any) </returns>
     private Vector2? CastBentRay (float targetVelocityX , float jumpVelocity) {
         //se wall distance < (distancia minima para conseguir um pulo sem esbarrar na parede), pule baixo e desacelerando
         Vector2? landingPosition = null;
@@ -352,7 +369,7 @@ public class EnemyAI : MonoBehaviour {
 
         float smoothVelocityX = startingVelocity.x;
         //bent ray
-        for (int rayCount = 0 ; rayCount < 50 ; rayCount++) {
+        for (int rayCount = 0 ; rayCount < bentRayMaxcount ; rayCount++) {
             float acceleration = ( rayCount == 0 ) ? movement.AccelerationTimeGrounded : movement.AccelerationTimeAirBorne;
 
             if (targetVelocityX != startingVelocity.x) {
@@ -395,6 +412,9 @@ public class EnemyAI : MonoBehaviour {
         //
     }
 
+    /// <summary>
+    /// triggers behaviour state.
+    /// </summary>
     public void Trigger (State newState ) {
         if (newState != currentState) {
             currentState = newState;
@@ -417,6 +437,9 @@ public class EnemyAI : MonoBehaviour {
         }
     }
 
+    /// <summary>
+    /// runs the behaviour for the current AI state.
+    /// </summary>
     private void RunStateBehaviour () {
         switch (currentState) {
             case State.Spawning:

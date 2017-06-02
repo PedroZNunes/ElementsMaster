@@ -12,4 +12,5 @@
     public static string enemy = "Enemy"; //TEMP change according to new enemies
     public static string projectileHolder = "ProjectileHolder";
     public static string block = "Block";
+
 }

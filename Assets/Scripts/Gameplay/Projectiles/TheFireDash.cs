@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 
+/// <summary>
+/// component attached to the player. works as a buff.
+/// </summary>
 [RequireComponent(typeof(Collider2D))]
 public class TheFireDash : MonoBehaviour {
 
@@ -12,7 +15,7 @@ public class TheFireDash : MonoBehaviour {
 
     private Movement movement;
 
-    void Awake () {
+    private void Awake () {
         movement = GetComponentInParent<Movement> ();
     }
 
@@ -23,17 +26,17 @@ public class TheFireDash : MonoBehaviour {
         this.dirX = dirX;
     }
 
-    void Update () {
+    private void Update () {
         movement.affectedByGravity = false;
-        if (currentDuration < delay) {
+        if (currentDuration < delay) { //delay
             currentDuration += Time.deltaTime;
             movement.Velocity = Vector2.zero;
         }
-        else if (currentDuration < duration + delay) {
+        else if (currentDuration < duration + delay) { //full speed
             movement.Velocity = new Vector2 (movement.MoveSpeed * speedBurst * dirX , 0);
             currentDuration += Time.deltaTime;
         }
-        else {
+        else { //end of buff
             currentDuration = 0f;
             movement.Velocity /= 2;
             movement.affectedByGravity = true;
@@ -41,7 +44,7 @@ public class TheFireDash : MonoBehaviour {
         }
     }
 
-    void OnTriggerEnter2D(Collider2D col ) {
+    private void OnTriggerEnter2D (Collider2D col ) {
         if (col.CompareTag (MyTags.enemy.ToString ())) {
             Debug.Log ("Enemy got struck by the fire dash! Lost xxx HP");
         }

@@ -1,6 +1,9 @@
 ﻿using System.Collections;
 using UnityEngine;
 
+/// <summary>
+/// the component attached to the firewall instance
+/// </summary>
 [RequireComponent(typeof(Damage), typeof (BoxCollider2D))]
 public class TheFireWall : MonoBehaviour {
 
@@ -25,7 +28,7 @@ public class TheFireWall : MonoBehaviour {
         StartCoroutine (DamageTicking ());
     }
 
-    void OnTriggerEnter2D ( Collider2D col ) {
+    private void OnTriggerEnter2D ( Collider2D col ) {
         if (col.GetComponent<TheFireball> () != null) {
             TheFireball theFireball = col.GetComponent<TheFireball> ();
             //theFireball.Buff();
@@ -33,15 +36,18 @@ public class TheFireWall : MonoBehaviour {
         }
     }
 
+    /// <summary>
+    /// from time to time, tiks damage to every enemy inside the box.
+    /// </summary>
     private IEnumerator DamageTicking () {
         while (gameObject != null) {
             //checkar col
             Vector2 origin = col.bounds.center;
 
-            RaycastHit2D[] hits = Physics2D.BoxCastAll (origin , col.size , 0f , Vector2.up, 0f, layerMask);
+            Collider2D[] hits = Physics2D.OverlapBoxAll (origin , col.size , 0f , layerMask);
             if (hits.Length > 0) {
                 for (int i = 0 ; i < hits.Length ; i++) {
-                    damage.DealDamage (tick.tickBaseDamage, hits[i].collider.gameObject);
+                    damage.DealDamage (tick.tickBaseDamage, hits[i].gameObject);
                 }
             }
             yield return new WaitForSeconds(tick.tickInterval);

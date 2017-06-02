@@ -2,10 +2,11 @@
 using System.Collections;
 using System;
 
+/// <summary>
+/// component to be attached to the fireball instance
+/// </summary>
 [RequireComponent(typeof(Damage), typeof (CircleCollider2D))]
 public class TheFireball : Projectile {
-
-    public GameObject owner { get; private set; }
 
     private Vector2 dir;
     private float speed;
@@ -22,8 +23,15 @@ public class TheFireball : Projectile {
 
     private CircleCollider2D col;
 
-
-    public void Initialize ( int dirX , Vector2 spawnPosition , ref float speed , ref Vector2 size , ref float maxDuration , ref GameObject owner ) {
+    /// <summary>
+    /// initialize the component, ensuring that the reuse of it (from the pool) won't be affected by the previous lifetime
+    /// </summary>
+    /// <param name="dirX">horizontal direction</param>
+    /// <param name="spawnPosition"></param>
+    /// <param name="speed"></param>
+    /// <param name="size"></param>
+    /// <param name="maxDuration"></param>
+    public void Initialize ( int dirX , Vector2 spawnPosition , ref float speed , ref Vector2 size , ref float maxDuration ) {
 
         gameObject.SetActive (true);
 
@@ -39,8 +47,6 @@ public class TheFireball : Projectile {
 
         col = GetComponent<CircleCollider2D> ();
         col.offset = new Vector2 (moveAmount * dirX , 0f);
-
-        this.owner = owner;
 
         StartCoroutine (Die (maxDuration)); //TODO: projectiles object pool for memory fragmentation
     }
@@ -59,7 +65,7 @@ public class TheFireball : Projectile {
                 Explode ();
             }
             else if (otherCollider.tag == MyTags.enemy.ToString ()) {
-                damage.DealDamage (baseDamage , col.gameObject);
+                damage.DealDamage (baseDamage , otherCollider.gameObject);
                 Explode ();
             }
         }
@@ -72,6 +78,11 @@ public class TheFireball : Projectile {
         StartCoroutine (Die (particlesExplosion.main.startLifetime.constantMax));
     }
 
+    /// <summary>
+    /// works like the unityengine.destroy method, but deactivating it for the pool
+    /// </summary>
+    /// <param name="time">time after which the object will die</param>
+    /// <returns></returns>
     private IEnumerator Die (float time) {
         while (time > 0) {
             time -= Time.fixedDeltaTime;
@@ -81,7 +92,4 @@ public class TheFireball : Projectile {
         particlesExplosion.gameObject.SetActive (false);
         gameObject.SetActive (false);
     }
-
-    
-
 }

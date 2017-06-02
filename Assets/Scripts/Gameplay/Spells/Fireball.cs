@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 
-
+/// <summary>
+/// Damaging single-target projectile with speed and size.
+/// </summary>
 public sealed class Fireball : Spell {
     [SerializeField]
     private Pool pool;
@@ -21,7 +23,12 @@ public sealed class Fireball : Spell {
         pool.Initialize (holder);
     }
 
-    public override void Cast ( float speedMod , float sizeMod , GameObject owner ) {
+    /// <summary>
+    /// Initializes a free fireball from the pool.
+    /// </summary>
+    /// <param name="speedMod">speed modificator that multiplies the base speed. to be used by buffs</param>
+    /// <param name="sizeMod">size modificator that multiplies the base size. to be used by buffs</param>
+    public override void Cast ( float speedMod , float sizeMod ) {
         if (CanCast ()) {
             base.Cast ();
             GameObject go = pool.FindFreeObject ();
@@ -31,7 +38,7 @@ public sealed class Fireball : Spell {
 
                 float velocityFinal = velocity * speedMod;
                 Vector2 sizeFinal = size * sizeMod;
-                theFireball.Initialize (castDirX , CastPoint , ref velocityFinal , ref sizeFinal , ref maxDuration , ref owner);
+                theFireball.Initialize (castDirX , CastPoint , ref velocityFinal , ref sizeFinal , ref maxDuration );
             }
         }
     }

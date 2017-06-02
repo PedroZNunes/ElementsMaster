@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+
 [RequireComponent(typeof(Controller2D))]
 public class Movement : MonoBehaviour {
 
@@ -13,12 +14,12 @@ public class Movement : MonoBehaviour {
 
     [SerializeField]
     private Wall wall;
-    private float wallUnstickTime;
+    private float wallUnstickTime; //time during which the player sticks to the side of the wall after the input received points otherwise
     public bool isWallSliding { get; private set; }
-    private int wallDirX;
+    private int wallDirX; //wall face direction
 
     public static float Gravity { get; private set; }
-    public bool affectedByGravity = true;
+    public bool affectedByGravity = true; //is it currently being affected by gravity?
 
     [SerializeField]
     private float moveSpeed = 10f;
@@ -33,9 +34,10 @@ public class Movement : MonoBehaviour {
     public float AccelerationTimeGrounded { get { return accelerationTimeGrounded; } }
 
     [SerializeField]
-    private float rayDeactivateTime = 0.2f;
+    private float rayDeactivateTime = 0.2f; //deactivating rays permit the player to fall-through the platforms
 
     private float smoothVelocityX;
+
     private Controller2D controller;
     private Vector3 velocity;
     public Vector2 Velocity {
@@ -43,24 +45,26 @@ public class Movement : MonoBehaviour {
         set { velocity = new Vector3 (value.x , value.y , 0); }
     }
 
-    private Vector2 directionalInput;
+    private Vector2 directionalInput; 
 
     public int DirX { get { return controller.Collisions.movementDirX; } }
 
-    void Awake () {
+    /// <summary>
+    /// if bound to the player, calculates the gravity
+    /// </summary>
+    private void Awake () {
         controller = GetComponent<Controller2D> ();
         if (GetComponent<Player> () != null) {
             CalculateGravity ();
         }
     }
 
-    void Start () {
+    private void Start () {
         CalculateJumpVelocity ();
         //Debug.Log (string.Format ("Gravity: {0} | Jump Velocity: {1}" , Gravity , jump.velocityMax));
     }
 
-
-    void FixedUpdate () {
+    private void FixedUpdate () {
         isWallSliding = false;
         wallDirX = ( controller.Collisions.right ) ? 1 : -1;
 
@@ -87,12 +91,7 @@ public class Movement : MonoBehaviour {
         float targetVelocityX = directionalInput.x * moveSpeed;
         float accelerationTime;
 
-        //if (targetVelocityX != 0) {//if moving
         accelerationTime = ( controller.Collisions.below ) ? accelerationTimeGrounded : accelerationTimeAirBorne;
-        //}
-        //else { //if stoping
-        //accelerationTime = ( controller.Collisions.below ) ? (accelerationTimeGrounded / 2f) : (accelerationTimeAirBorne / 2f);
-        //}
 
         velocity.x = Mathf.SmoothDamp (velocity.x , targetVelocityX , ref smoothVelocityX , accelerationTime);
     }
@@ -127,18 +126,15 @@ public class Movement : MonoBehaviour {
         }
         else {
             if (isWallSliding) {
-                if (wallDirX == directionalInput.x) {
-                    //Debug.Log ("Climbing");
+                if (wallDirX == directionalInput.x) { //Climbing
                     velocity.x = -wallDirX * wall.climb.x;
                     velocity.y = wall.climb.y;
                 }
-                else if (directionalInput.x == 0) {
-                    //Debug.Log ("Jumping Off");
+                else if (directionalInput.x == 0) { //Jumping off 
                     velocity.x = -wallDirX * wall.jumpOff.x;
                     velocity.y = wall.jumpOff.y;
                 }
-                else {
-                    //Debug.Log ("Leaping Away");
+                else { //Leaping away
                     velocity.x = -wallDirX * wall.leap.x;
                     velocity.y = wall.leap.y;
                 }
@@ -170,7 +166,6 @@ public class Movement : MonoBehaviour {
         controller.DeactivateRays (rayDeactivateTime);
     }
 
-    //////maybe I`ll need this later
     //private IEnumerator TrackHeightAndLength () {
     //    float timeCount = 0f;
     //    float x1 = transform.position.x;
@@ -204,7 +199,7 @@ public class Movement : MonoBehaviour {
     }
 
     [System.Serializable]
-    struct Jump {
+    private struct Jump {
         public float heightMin;
         public float heightMax;
         public float timeToApex;
@@ -215,7 +210,7 @@ public class Movement : MonoBehaviour {
     }
 
     [System.Serializable]
-    struct Wall {
+    private struct Wall {
         public float stickTime;
         public Vector2 jumpOff, leap, climb;
         public float slideSpeedMax;

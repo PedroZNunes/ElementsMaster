@@ -1,7 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
+/// <summary>
+/// Deals damage.
+/// </summary>
 public class Damage : MonoBehaviour {
 
     Health targetHP;

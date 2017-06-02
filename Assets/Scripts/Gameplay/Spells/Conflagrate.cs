@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// NOT IMPLEMENTED YET.
+/// </summary>
 public class Conflagrate : Spell {
 
     /* essa spell gera algum tipo de aviso qnd est[a disponivel.

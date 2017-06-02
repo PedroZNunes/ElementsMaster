@@ -4,31 +4,27 @@ using UnityEngine;
 using System;
 using Random = UnityEngine.Random;
 
+[RequireComponent (typeof (PolygonCollider2D))]
 public sealed class EnemySpawner : MonoBehaviour {
 
     private HashSet<Collider2D> availableColliders = new HashSet<Collider2D> ();
     public HashSet<Collider2D> AvailableColliders { get { return availableColliders; } }
 
     [SerializeField]
-    private Range waveInterval;
+    private Range waveInterval; //interval between waves
     [SerializeField]
-    private Range waveDuration;
+    private Range waveDuration; //base duration for spawning the wave's enemies
     [SerializeField]
-    private int waveDifficultyMin;
+    private int waveDifficultyMin; //minimum difficulty to spawn a wave.
+    private int difficultyMin; //minimum difficulty possible to spawn
 
-    private WaitForSeconds intervalInSeconds;
-    
-    //a quantidade de cada inimigo na pool vai indicar qual a chance de tal inimigo ser spawnado. a pool controla a quantidade.
-    //diferentes pools vao ser usadas para cada inimigo.
-    //na hora de escolher de qual pool pegar o proximo inimigo, ele olha no size da pool quando faz o random. assim a maior pool vai sempre ter maior chance de spawnar mobs.
     [SerializeField]
-    private Pool[] pools;
+    private Pool[] pools; //one pool for each type of enemy. each pool provides the difficulty also.
     [SerializeField]
     private Vector2 spawningAreaSize;
 
     [SerializeField]
-    private int difficultyTarget; //difficulty target sera estipulada por um sistema de balanceamento futuramente.
-    private int difficultyMin;
+    private int difficultyTarget; //difficulty target will be stipulated by a balance system in the near future.
 
     [SerializeField]
     private LayerMask obstacleLayerMask;
@@ -41,7 +37,7 @@ public sealed class EnemySpawner : MonoBehaviour {
     private Coroutine spawningCoroutine;
     private Player player;
     
-    void Awake () {
+    private void Awake () {
         GameObject holderGO = (GameObject) Instantiate (new GameObject () , transform.parent);
         holderGO.name = holderName;
         holder = holderGO.transform;
@@ -64,13 +60,33 @@ public sealed class EnemySpawner : MonoBehaviour {
     private void OnEnable () { GameManager.stateChangedEvent += OnStateChanged; }
     private void OnDisable () { GameManager.stateChangedEvent -= OnStateChanged; }
 
-    private void OnStateChanged (GameManager.States oldState, GameManager.States newState) {
-        if (newState == GameManager.States.Play) {
-            StartSpawning ();
+    /// <summary>
+    /// sets which platforms can be used as spawning point.
+    /// </summary>
+    private void MapPlatforms () {
+        float distance = 0.5f;
+        ContactFilter2D filter = new ContactFilter2D ();
+        filter.SetLayerMask (obstacleLayerMask);
+
+        List<Collider2D> colList = new List<Collider2D> ();
+        Collider2D[] allBlocks = new Collider2D[4000];
+        RaycastHit2D[] hit = new RaycastHit2D[1];
+
+        col.OverlapCollider (filter , allBlocks);
+
+        foreach (Collider2D c in allBlocks) {
+            if (c == null) {
+                continue;
+            }
+
+            int n = c.Raycast (Vector2.up , filter , hit , distance);
+            if (n == 0) {
+                availableColliders.Add (c);
+                continue;
+            }
         }
-        if (oldState == GameManager.States.Play) {
-            StopSpawning ();
-        }
+
+        Debug.LogFormat ("Mapping finished. {0} available colliders for spawning" , AvailableColliders.Count);
     }
 
     public void StartSpawning () {
@@ -99,7 +115,7 @@ public sealed class EnemySpawner : MonoBehaviour {
 
             int difficultyDifference = difficultyTarget - difficultyCurrent;
             Debug.Log ("Difficulty Difference: " + difficultyDifference);
-            if (difficultyDifference > waveDifficultyMin) {
+            if (difficultyDifference >= waveDifficultyMin) {
                 StartCoroutine (SpawnWave (difficultyDifference));
             }
 
@@ -183,30 +199,11 @@ public sealed class EnemySpawner : MonoBehaviour {
         return toSpawn;
     }
 
-    private void MapPlatforms () {
-        float distance = 0.5f;
-        ContactFilter2D filter = new ContactFilter2D ();
-        filter.SetLayerMask (obstacleLayerMask);
-        List<Collider2D> colList = new List<Collider2D> ();
-        Collider2D[] allBlocks = new Collider2D[4000];
-        RaycastHit2D[] hit = new RaycastHit2D[1];
-        col.OverlapCollider (filter , allBlocks);
-        
-        foreach (Collider2D c in allBlocks) {
-            if (c == null) {
-                continue;
-            }
-
-            int n = c.Raycast (Vector2.up , filter , hit , distance);
-            if (n == 0) {
-                availableColliders.Add (c);
-                continue;
-            }
-        }
-
-        Debug.LogFormat ("Mapping finished. {0} available colliders for spawning", AvailableColliders.Count);
-    }
-
+    /// <summary>
+    /// overlaps a capsule of spawning area size
+    /// compare a random index from that list to the available colliders (defined by the mapping)
+    /// </summary>
+    /// <returns> a vector2 representing the top-most centered position of the block. if nothing is found, returns a vector.zero</returns>
     private Vector2 PickPlatform () {
         Vector2 origin = player.transform.position;
         List<Collider2D> cols = new List<Collider2D> (Physics2D.OverlapCapsuleAll (origin , spawningAreaSize , CapsuleDirection2D.Horizontal , 0));
@@ -219,8 +216,23 @@ public sealed class EnemySpawner : MonoBehaviour {
         return Vector2.zero;
     }
 
+    /// <summary>
+    /// function linked to an event to track when states change. this takes care of starting and stopping the spawn system.
+    /// </summary>
+    /// <param name="oldState"></param>
+    /// <param name="newState"></param>
+    private void OnStateChanged ( GameManager.States oldState , GameManager.States newState ) {
+        if (newState == GameManager.States.Play && oldState != GameManager.States.Pause) {
+            StartSpawning ();
+        }
+        if (oldState == GameManager.States.Play && newState != GameManager.States.Pause) {
+            StopSpawning ();
+        }
+    }
 
-
+    /// <summary>
+    /// object pool to avoid fragmentation.
+    /// </summary>
     [Serializable]
     public class Pool {
         [SerializeField]
@@ -239,7 +251,10 @@ public sealed class EnemySpawner : MonoBehaviour {
 
         private Transform holder;
 
-        //Can be made into a coroutine for performance purposes.
+        /// <summary>
+        /// spawn all objects and deactivate them.
+        /// </summary>
+        /// <param name="holder"> transform responsible for storing the instances </param>
         public void Initialize (Transform holder) {
             this.holder = holder;
 

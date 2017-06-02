@@ -17,35 +17,35 @@ public class GameManager : MonoBehaviour {
 	
     public static bool isPaused { get; private set; }
 
-    void Awake () {
+    private void Awake () {
         Objective.Triggered += OnObjectiveTriggered;
         PlayerInput.PressPauseEvent += Pause;
     }
 
-    void Start () {
+    private void Start () {
         //Gives the start to the whole game.
-        //later it will wait for the map to load async.
+        //later it will wait for the map to load.
         Trigger (States.Opening);
     }
 
-    void StartPlay () {
+    private void Update () {
+        GameStateSwitch ();
+    }
+
+    private void StartPlay () {
         for (int i = 0 ; i < objectives.Count; i++) {
             objectives[i].Reset();
         }
     }
 
-    void StartOpening () {
+    private void StartOpening () {
         foreach (Objective obj in GameObject.FindObjectsOfType<Objective> ()) {
             objectives.Add (obj);
         }
         Trigger (States.Play);
     }
 
-    void Update () {
-        GameStateSwitch ();
-	}
-
-    void GameStateSwitch () {
+    private void GameStateSwitch () {
         switch (currentState) {
             case States.Pause:
                 break;
@@ -65,16 +65,22 @@ public class GameManager : MonoBehaviour {
         }
     }
 
-    void OnObjectiveTriggered (object source, ObjectiveTriggeredEventArgs e) {
-        Objective obj = e.objectiveTriggered.GetComponent<Objective>();
-        objectives.Remove (obj);
+    /// <summary>
+    /// this function fires up when an objective is triggered by the player. counts the remaining objectives and checks for win state.
+    /// </summary>
+    private void OnObjectiveTriggered (Objective objectiveTriggered) {
+        objectives.Remove (objectiveTriggered);
 
         if (objectives.Count <= 0) {
             Trigger (States.Win);
         }
     }
 
-    void Trigger (States newState ) {
+    /// <summary>
+    /// trigger new state
+    /// </summary>
+    /// <param name="newState"></param>
+    private void Trigger (States newState ) {
         if (newState != currentState) {
 
             if (stateChangedEvent != null) {
@@ -111,7 +117,10 @@ public class GameManager : MonoBehaviour {
         }
     }
 
-    static public void Pause () {
+    /// <summary>
+    /// pause / unpause
+    /// </summary>
+    public static void Pause () {
         if (!isPaused) {
             isPaused = true;
             Time.timeScale = 0f;
@@ -120,10 +129,7 @@ public class GameManager : MonoBehaviour {
             isPaused = false;
             Time.timeScale = 1f;
         }
-        FireOnPauseEvent ();
-    }
 
-    static void FireOnPauseEvent () {
         if (OnPause != null) {
             OnPause (isPaused);
         }

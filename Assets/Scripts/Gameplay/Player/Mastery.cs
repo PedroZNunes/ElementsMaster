@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 
+/// <summary>
+///  Parent for every player class in the game
+/// </summary>
 public class Mastery : MonoBehaviour {
 
     protected float globalCD = 0f;
@@ -9,7 +12,7 @@ public class Mastery : MonoBehaviour {
     public virtual void Spell3 () { }
     public virtual void Spell4 () { }
 
-    void LateUpdate () {
+    private void LateUpdate () {
         if (inGlobalCD ()) {
             globalCD -= Time.deltaTime;
         }

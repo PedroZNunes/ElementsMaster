@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 
+/// <summary>
+/// A dash forward with delay, duration and speed.
+/// </summary>
 public class FireDash : Spell {
 
     [SerializeField]
@@ -14,7 +17,7 @@ public class FireDash : Spell {
     private float speedMultiplier = 2f;
 
 
-    void Awake () {
+    private void Awake () {
         if (holder == null)
             holder = GameObject.FindWithTag (MyTags.player.ToString ()).transform;
         theFireDash = theFireDashGO.GetComponent<TheFireDash> ();

@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 
+/// <summary>
+/// responsible for following the player around
+/// </summary>
 public class CameraFollow : MonoBehaviour {
 
     [SerializeField]
@@ -8,11 +11,11 @@ public class CameraFollow : MonoBehaviour {
     private Controller2D target;
 
     [SerializeField]
-    private Vector2 focusAreaSize;
-    private FocusArea focusArea;
+    private Vector2 focusAreaSize;  //square zone that the camera focuses on. whenever it moves, the camera goes with it. 
+    private FocusArea focusArea;    //this area smoothens the camera movement and prevent unnecessary movement at every tiny player displacement
 
     [SerializeField]
-    private LookAhead lookAhead;
+    private LookAhead lookAhead; //variables responsible for repositioning the camera a bit in front of the player
 
     [SerializeField]
     private Vector2 smoothTimeIdle;
@@ -28,7 +31,7 @@ public class CameraFollow : MonoBehaviour {
     
     private bool isFocusMoving = false;
 
-    void Start () {
+    private void Start () {
         if (target == null) {
             target = FindObjectOfType<Player> ().GetComponent<Controller2D>();
         }
@@ -38,7 +41,7 @@ public class CameraFollow : MonoBehaviour {
     }
 
 
-    void LateUpdate () {
+    private void LateUpdate () {
         focusArea.Update (target.collider.bounds);
         isFocusMoving = ( Vector3.Magnitude (focusArea.velocity) != 0 );
 
@@ -61,12 +64,12 @@ public class CameraFollow : MonoBehaviour {
         transform.position = (Vector3)focusPosition + Vector3.forward * -10;
     }
 
-    void OnDrawGizmos () {
+    private void OnDrawGizmos () {
         Gizmos.color = new Color (0 , 1 , 1 , 0.4f);
         Gizmos.DrawCube (focusArea.center , focusAreaSize);
     }
 
-    struct FocusArea {
+    private struct FocusArea {
         public Vector2 center;
         public Vector2 velocity;
         float left, right;
@@ -117,8 +120,9 @@ public class CameraFollow : MonoBehaviour {
             }
         }
     }
+
     [System.Serializable]
-    struct LookAhead {
+    private struct LookAhead {
         [HideInInspector]
         public float currentX;
         [HideInInspector]
@@ -127,7 +131,7 @@ public class CameraFollow : MonoBehaviour {
         public float directionX;
         
         public float distanceX;
-        Vector2 velocity;
+        private Vector2 velocity;
     }
 
 }

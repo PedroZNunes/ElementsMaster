@@ -1,7 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
+/// <summary>
+/// Deals with HP loss, gain, refill and death checking.
+/// </summary>
 public class Health : MonoBehaviour {
 
     [SerializeField]

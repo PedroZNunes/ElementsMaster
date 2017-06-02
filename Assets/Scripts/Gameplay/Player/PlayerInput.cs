@@ -10,16 +10,19 @@ public class PlayerInput : MonoBehaviour {
     static public event Action PressPauseEvent;
 
 
-	void Awake () {
+    private void Awake () {
         player = GetComponent<Player> ();
         mastery = GetComponentInChildren<Mastery> ();
     }
-	
-	void Update () {
-        RunStateMachine ();
+
+    private void Update () {
+        RunStateBehaviour ();
     }
 
-    void RunStateMachine () {
+    /// <summary>
+    /// checks for input depending on the current game state.
+    /// </summary>
+    private void RunStateBehaviour () {
         switch (GameManager.currentState) {
             case GameManager.States.Pause:
                 CheckPause ();
@@ -43,7 +46,7 @@ public class PlayerInput : MonoBehaviour {
         }
     }
 
-    void CheckMovement () {
+    private void CheckMovement () {
         if (player.movement != null) {
             Vector2 directionalInput = new Vector2 (Input.GetAxisRaw ("Horizontal") , Input.GetAxisRaw ("Vertical"));
             player.movement.SetDirectionalInput (directionalInput);
@@ -58,7 +61,7 @@ public class PlayerInput : MonoBehaviour {
         }
     }
 
-    void CheckPause () {
+    private void CheckPause () {
         if (Input.GetButtonDown ("Cancel")) {
             if (PressPauseEvent != null) {
                 PressPauseEvent ();
@@ -66,7 +69,7 @@ public class PlayerInput : MonoBehaviour {
         }
     }
 
-    void CheckActions () {
+    private void CheckActions () {
         if (Input.GetButtonDown ("Fire1")) {
             mastery.Spell1 ();
         }
