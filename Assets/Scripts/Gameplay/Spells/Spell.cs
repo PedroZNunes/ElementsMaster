@@ -91,6 +91,7 @@ public class Spell : MonoBehaviour {
             instances = new GameObject[size];
             for (int i = 0 ; i < size ; i++) {
                 instances[i] = Instantiate (prefab , holder);
+                instances[i].name = prefab.name;
                 instances[i].SetActive (false);
             }
         }

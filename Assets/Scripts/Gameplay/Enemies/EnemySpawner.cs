@@ -33,14 +33,19 @@ public sealed class EnemySpawner : MonoBehaviour {
     [SerializeField]
     private LayerMask obstacleLayerMask;
 
+    [SerializeField]
+    private string holderName;
     private Transform holder;
+
     private PolygonCollider2D col;
     private Coroutine spawningCoroutine;
     private Player player;
     
     void Awake () {
         GameObject holderGO = (GameObject) Instantiate (new GameObject () , transform.parent);
+        holderGO.name = holderName;
         holder = holderGO.transform;
+
         col = GetComponent<PolygonCollider2D> ();
         player = FindObjectOfType<Player> ();
         // Filling the pools
@@ -241,6 +246,7 @@ public sealed class EnemySpawner : MonoBehaviour {
             instances = new GameObject[size];
             for (int i = 0 ; i < size ; i++) {
                 instances[i] = Instantiate (prefab , holder);
+                instances[i].name = prefab.name;
                 instances[i].SetActive (false);
             }
         }
