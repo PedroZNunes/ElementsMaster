@@ -3,14 +3,14 @@
 public class Objective : MonoBehaviour {
 
     public delegate void TriggeredEventHandler ( Objective obj );
-    public static event TriggeredEventHandler Triggered;
+    public static event TriggeredEventHandler OnTriggered;
 
     public bool isEnabled = false;
 
     [SerializeField]
     private Color notTriggeredColor, triggeredColor;
 
-    Collider2D col;
+    Collider2D collider;
     private bool isTriggered = false;
     public bool IsTriggered {
         get { return isTriggered; }
@@ -21,7 +21,7 @@ public class Objective : MonoBehaviour {
     }
 
     private void Awake () {
-        col = GetComponent<Collider2D> ();
+        collider = GetComponent<Collider2D> ();
     }
 
     public void Reset () {
@@ -33,22 +33,19 @@ public class Objective : MonoBehaviour {
     /// Receives message from the controller2D. checks if its the player and trigger the objective if true.
     /// </summary>
     /// <param name="source">who collided with it</param>
-    public void OnCollision ( GameObject source ) {
-        if (source.CompareTag (MyTags.player.ToString ())) {
-            Debug.Log ("Collision with Player");
-            
+    private void OnController2DTrigger (Collider2D col) {
+        if (col.CompareTag (MyTags.player.ToString ())) {
             Trigger ();
         }
     }
 
     private void Trigger () {
-        if (Triggered != null) {
-            Triggered (this);
+        if (OnTriggered != null) {
+            OnTriggered (this);
         }
         
-        col.enabled = isEnabled = false;
+        collider.enabled = isEnabled = false;
         IsTriggered = true;
-
         Debug.Log ("Player triggered the " + name);
     }
 

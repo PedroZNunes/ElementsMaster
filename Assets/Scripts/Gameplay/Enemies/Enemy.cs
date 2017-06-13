@@ -27,7 +27,7 @@ public class Enemy : Actor {
         health = GetComponent<Health> ();
         health.FillHP ();
 
-        transform.position = position + Vector2.up * controller.collider.size.y / 2 ;
+        transform.position = position + Vector2.up * (controller.collider.size.y + controller.SkinWidth);
 
         ai = GetComponent<EnemyAI> ();
         gameObject.SetActive (true);

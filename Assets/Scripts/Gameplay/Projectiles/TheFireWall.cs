@@ -1,62 +1,87 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 /// <summary>
 /// the component attached to the firewall instance
 /// </summary>
-[RequireComponent(typeof(Damage), typeof (BoxCollider2D))]
+[RequireComponent(typeof (BoxCollider2D))]
 public class TheFireWall : MonoBehaviour {
 
-    [SerializeField]
-    private Tick tick;
+    private List<CollidersCD> trackCollidersCD = new List<CollidersCD> ();
 
-    private float currentTime;
+    private float tickTime;
 
     [SerializeField]
     private LayerMask layerMask;
 
-    private BoxCollider2D col;
+    private BoxCollider2D collider;
 
     private Damage damage;
+    private Knockback knockback;
 
+    public void Initialize(ref float tickTime, ref Knockback knockback, ref Damage damage, float maxDuration ) {
+        collider = GetComponent<BoxCollider2D> ();
+        this.tickTime = tickTime;
 
-    public void Initialize(float maxDuration ) {
-        col = GetComponent<BoxCollider2D> ();
-        damage = GetComponent<Damage> ();
+        this.damage = damage;
+        this.knockback = knockback;
         //calculate damage. for now using just the base
         Destroy (gameObject , maxDuration);
-        StartCoroutine (DamageTicking ());
+        //StartCoroutine (DamageTicking ());
+        
     }
 
-    private void OnTriggerEnter2D ( Collider2D col ) {
-        if (col.GetComponent<TheFireball> () != null) {
-            TheFireball theFireball = col.GetComponent<TheFireball> ();
-            //theFireball.Buff();
-            Debug.Log ("Firewall buffed fireball projectile: " + col.name);
+    private void Update () {
+        
+        if (trackCollidersCD.Count > 0) {
+            Predicate<CollidersCD> isOffCD = ( colCD => colCD.cd <= 0 );
+            trackCollidersCD.RemoveAll (isOffCD);
+        }
+
+        if (trackCollidersCD.Count > 0) { 
+            for (int i = 0 ; i < trackCollidersCD.Count ; i++) {
+                trackCollidersCD[i].cd -= Time.deltaTime;
+            }
         }
     }
 
-    /// <summary>
-    /// from time to time, tiks damage to every enemy inside the box.
-    /// </summary>
-    private IEnumerator DamageTicking () {
-        while (gameObject != null) {
-            //checkar col
-            Vector2 origin = col.bounds.center;
+    private void OnController2DTrigger ( Collider2D col ) { 
+        if (col.GetComponent<Enemy> () != null) {
+            if (!isColliderOnCD (col)) {
+                int pushDirX = ( col.bounds.center.x - collider.bounds.center.x > 0 ) ? 1 : -1;
+                damage.DealDamage (col);
+                knockback.Push (col, pushDirX);
+                trackCollidersCD.Add (new CollidersCD (col , tickTime));
+            }
+        }
+    }
 
-            Collider2D[] hits = Physics2D.OverlapBoxAll (origin , col.size , 0f , layerMask);
-            if (hits.Length > 0) {
-                for (int i = 0 ; i < hits.Length ; i++) {
-                    damage.DealDamage (tick.tickBaseDamage, hits[i].gameObject);
+    private bool isColliderOnCD (Collider2D targetCollider) {
+        bool exists = false;
+        if (trackCollidersCD.Count > 0) {
+            foreach (CollidersCD colCD in trackCollidersCD) {
+                if (targetCollider == colCD.Col) {
+                    //Enemy already in the list.
+                    exists = true;
+                    break;
                 }
             }
-            yield return new WaitForSeconds(tick.tickInterval);
         }
+        return exists;
     }
 
-    [System.Serializable]
-    public struct Tick {
-        public float tickInterval;
-        public int tickBaseDamage;
+    private class CollidersCD {
+        
+        private Collider2D col;
+        public Collider2D Col {  get { return col; } }
+        public float cd;
+        
+
+        public CollidersCD (Collider2D col, float cd ) {
+            this.col = col;
+            this.cd = cd;
+        }
     }
 }

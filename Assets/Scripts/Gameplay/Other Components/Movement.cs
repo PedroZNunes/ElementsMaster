@@ -83,6 +83,10 @@ public class Movement : MonoBehaviour {
         }
     }
 
+    public void AddForce ( Vector2 force ) {
+        Velocity = force;
+    }
+
     public void SetDirectionalInput(Vector2 input ) {
         directionalInput = input;
     }
@@ -186,8 +190,10 @@ public class Movement : MonoBehaviour {
     //jumpHeight = (gravity * timeToJumpApex^2)/2
     //Solving for gravity
     //gravity = 2*jumpHeight / timeToJumpApex^2
+
+
     private void CalculateGravity () {
-        float halfHeight = controller.collider.size.y / 2f;
+        float halfHeight = controller.collider.bounds.extents.y;
         Gravity = -( 2 * ( jump.heightMax + halfHeight ) ) / Mathf.Pow (jump.timeToApex , 2);
     }
 

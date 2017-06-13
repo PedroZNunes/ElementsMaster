@@ -4,14 +4,13 @@ using System;
 /// <summary>
 /// Replaces the rigidbody component. deals with collisions using raycast
 /// </summary>
-[RequireComponent(typeof(BoxCollider2D))]
+[RequireComponent(typeof (BoxCollider2D), typeof(Collider2D))]
 public class Controller2D : MonoBehaviour {
 
-    public delegate void OnCollisionEventHandler (GameObject source, GameObject target);
-    public event OnCollisionEventHandler OnCollision;
-
     private const float SKINWIDTH = 0.015f;
-    private const float distanceBetweenRays = 0.25f;
+    public float SkinWidth { get { return SKINWIDTH; } }
+
+    private const float distanceBetweenRays = 0.2f;
 
     private int horizontalRayCount;
     private int verticalRayCount;
@@ -77,7 +76,15 @@ public class Controller2D : MonoBehaviour {
             Debug.DrawRay (rayOrigin , Vector2.up * directionY , Color.red);
 
             if (hit && !raysDeactivated) {
-                hit.collider.gameObject.SendMessage ("OnCollision" , gameObject , SendMessageOptions.DontRequireReceiver);
+                if (!hit.collider.isTrigger) {
+                    hit.collider.gameObject.SendMessage ("OnController2DCollision" , collider , SendMessageOptions.DontRequireReceiver);
+                    SendMessageUpwards ("OnController2DCollision" , hit.collider , SendMessageOptions.DontRequireReceiver);
+                }
+                else {
+                    hit.collider.gameObject.SendMessage ("OnController2DTrigger" , collider , SendMessageOptions.DontRequireReceiver);
+                    SendMessageUpwards ("OnController2DTrigger" , hit.collider , SendMessageOptions.DontRequireReceiver);
+                }
+
 
                 bool pass = HandleVerticalCollisions (hit , directionY);
                 if (!pass) {
@@ -109,7 +116,16 @@ public class Controller2D : MonoBehaviour {
             Debug.DrawRay (rayOrigin , Vector2.right * directionX , Color.red);
 
             if (hit && !raysDeactivated) {
-                hit.collider.gameObject.SendMessage ("OnCollision" , gameObject , SendMessageOptions.DontRequireReceiver);
+                if (hit.collider == this.collider) { continue; }
+
+                if (hit.collider.isTrigger || this.collider.isTrigger) {
+                    hit.collider.gameObject.SendMessage ("OnController2DTrigger" , collider , SendMessageOptions.DontRequireReceiver);
+                    SendMessageUpwards ("OnController2DTrigger" , hit.collider , SendMessageOptions.DontRequireReceiver);
+                }
+                else {
+                    hit.collider.gameObject.SendMessage ("OnController2DCollision" , collider , SendMessageOptions.DontRequireReceiver);
+                    SendMessageUpwards ("OnController2DCollision" , hit.collider , SendMessageOptions.DontRequireReceiver);
+                }
 
                 bool pass = HandleHorizontalCollisions (hit);
                 if (!pass) {
@@ -180,6 +196,7 @@ public class Controller2D : MonoBehaviour {
 
         return true;
     }
+
 
     public struct CollisionInfo {
         public bool standingOnPassThrough;

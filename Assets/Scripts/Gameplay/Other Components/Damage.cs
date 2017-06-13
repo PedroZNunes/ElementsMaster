@@ -1,20 +1,26 @@
 ﻿using UnityEngine;
+using System;
 
 /// <summary>
 /// Deals damage.
 /// </summary>
-public class Damage : MonoBehaviour {
+[Serializable]
+public class Damage {
 
-    Health targetHP;
+    private Health targetHP;
 
-    public bool DealDamage ( int damage, GameObject target ) {
+    [SerializeField]
+    private int baseAmount;
+
+    public void DealDamage (int damage, Collider2D target ) {
         targetHP = target.GetComponent<Health> ();
-        if (targetHP == null)
-            return false;
 
         //damage type calculations go here
         Debug.LogFormat ("{0} took {1} damage." , target.name , damage);
         targetHP.LoseHP (damage);
-        return true;
+    }
+
+    public void DealDamage ( Collider2D target ) {
+        DealDamage (baseAmount , target);
     }
 }

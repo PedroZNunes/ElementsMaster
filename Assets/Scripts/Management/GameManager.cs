@@ -18,7 +18,7 @@ public class GameManager : MonoBehaviour {
     public static bool isPaused { get; private set; }
 
     private void Awake () {
-        Objective.Triggered += OnObjectiveTriggered;
+        Objective.OnTriggered += OnObjectiveTriggered;
         PlayerInput.PressPauseEvent += Pause;
     }
 

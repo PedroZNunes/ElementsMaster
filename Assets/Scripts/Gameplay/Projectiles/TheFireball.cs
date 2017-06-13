@@ -5,23 +5,29 @@ using System;
 /// <summary>
 /// component to be attached to the fireball instance
 /// </summary>
-[RequireComponent(typeof(Damage), typeof (CircleCollider2D))]
+[RequireComponent(typeof (Controller2D))]
 public class TheFireball : Projectile {
 
-    private Vector2 dir;
+    [SerializeField]
+    private Buffed buff;
+
+    private Knockback knockback;
+    private int dirX;
     private float speed;
-    private float moveAmount;
 
     private Damage damage;
-    [SerializeField]
-    private int baseDamage;
+
+    private bool isBuffed;
 
     [SerializeField]
     private ParticleSystem particles;
     [SerializeField]
     private ParticleSystem particlesExplosion;
 
-    private CircleCollider2D col;
+    private Controller2D controller;
+    private BoxCollider2D collider;
+
+    private ParticleSystem.MinMaxGradient defaultGradient;
 
     /// <summary>
     /// initialize the component, ensuring that the reuse of it (from the pool) won't be affected by the previous lifetime
@@ -31,49 +37,81 @@ public class TheFireball : Projectile {
     /// <param name="speed"></param>
     /// <param name="size"></param>
     /// <param name="maxDuration"></param>
-    public void Initialize ( int dirX , Vector2 spawnPosition , ref float speed , ref Vector2 size , ref float maxDuration ) {
 
+    private void Awake () {
+        defaultGradient = particles.colorOverLifetime.color;
+    }
+
+    public void Initialize ( int dirX , Vector2 spawnPosition , ref float speed , ref Vector2 size , ref Damage damage , ref Knockback knockback , ref float maxDuration ) {
+
+        ResetBuff ();
+        
         gameObject.SetActive (true);
 
-        damage = GetComponent<Damage> ();
+        this.dirX = dirX;
 
-        dir = Vector2.right * dirX;
         transform.position = spawnPosition;
 
-        this.speed = speed;
-        moveAmount = speed * Time.deltaTime;
+        this.speed = speed * dirX;
 
         transform.localScale = new Vector3 (size.x , size.y , 1);
 
-        col = GetComponent<CircleCollider2D> ();
-        col.offset = new Vector2 (moveAmount * dirX , 0f);
+        controller = GetComponent<Controller2D> ();
+        collider = controller.collider;
+
+        this.damage = damage;
+        this.knockback = knockback;
+
+        ParticleSystem.ColorOverLifetimeModule colorModule = particles.colorOverLifetime;
+        colorModule.color = defaultGradient;
 
         StartCoroutine (Die (maxDuration)); //TODO: projectiles object pool for memory fragmentation
     }
 
     private void Update () {
-        float moveDistance = speed * Time.deltaTime;
-        transform.Translate (dir * moveDistance);
+        controller.Move (Vector2.right * ( speed * Time.deltaTime ));
     }
 
-    private void OnTriggerEnter2D ( Collider2D otherCollider ) {
-        if (col.enabled) {
-            if (otherCollider.tag == MyTags.block.ToString ()) {
-                ColliderDistance2D colDist = otherCollider.Distance (col);
+    private void OnController2DTrigger ( Collider2D col ) {
+        if (collider.enabled) {
+            if (col.GetComponent<TheFireWall> () != null) {
+                TheFireWall theFireWall = col.GetComponent<TheFireWall> ();
+                Buff ();
+            } else if (col.CompareTag (MyTags.enemy.ToString ())) {
+                damage.DealDamage (col);
+                knockback.Push (col, dirX);
+                Explode ();
+            } else if (col.CompareTag (MyTags.block.ToString ())) {
+                ColliderDistance2D colDist = col.Distance (collider);
                 Vector3 dist = ( colDist.pointB - colDist.pointA );
                 transform.position = transform.position - dist;
-                Explode ();
-            }
-            else if (otherCollider.tag == MyTags.enemy.ToString ()) {
-                damage.DealDamage (baseDamage , otherCollider.gameObject);
                 Explode ();
             }
         }
     }
 
+    private void ResetBuff () {
+        isBuffed = false;
+        particles.transform.localScale = Vector3.one;
+        
+    }
+
+    private void Buff () {
+        if (!isBuffed) {
+            isBuffed = true;
+
+            particles.transform.localScale = Vector3.one * buff.size;
+
+            ParticleSystem.ColorOverLifetimeModule colorModule = particles.colorOverLifetime;
+            ParticleSystem.MinMaxGradient gradient = new ParticleSystem.MinMaxGradient (buff.gradientMin , buff.gradientMax);
+            colorModule.color = gradient;
+        }
+    }
+
     private void Explode () {
-        col.enabled = false; 
+        collider.enabled = false; 
         particles.Stop ();
+        
         particlesExplosion.gameObject.SetActive (true);
         StartCoroutine (Die (particlesExplosion.main.startLifetime.constantMax));
     }
@@ -88,8 +126,15 @@ public class TheFireball : Projectile {
             time -= Time.fixedDeltaTime;
             yield return new WaitForFixedUpdate ();
         }
-        col.enabled = true;
+        collider.enabled = true;
         particlesExplosion.gameObject.SetActive (false);
         gameObject.SetActive (false);
+    }
+
+    [Serializable]
+    private struct Buffed {
+        public float size;
+        public Color gradientMin;
+        public Color gradientMax;
     }
 }

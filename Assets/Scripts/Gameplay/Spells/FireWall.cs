@@ -15,6 +15,11 @@ public class FireWall : Spell {
     private float tickTime;
     [SerializeField]
     private LayerMask layerMask;
+    [SerializeField]
+    private Damage damage;
+    [SerializeField]
+    private Knockback knockback;
+    
 
     private float halfWidth;
 
@@ -34,9 +39,8 @@ public class FireWall : Spell {
             //TODO: check if jumping and cast a variation of the spell in case it is.
             GameObject firewallGO = Instantiate (prefab , CastPoint , Quaternion.identity , holder);
             TheFireWall theFireWall = firewallGO.GetComponent<TheFireWall> ();
-            theFireWall.Initialize (duration);
+            theFireWall.Initialize (ref tickTime, ref knockback, ref damage, duration);
         }
-
     }
 
 }

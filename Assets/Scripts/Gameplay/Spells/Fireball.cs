@@ -4,6 +4,7 @@
 /// Damaging single-target projectile with speed and size.
 /// </summary>
 public sealed class Fireball : Spell {
+
     [SerializeField]
     private Pool pool;
 
@@ -14,6 +15,11 @@ public sealed class Fireball : Spell {
 
     [SerializeField]
     private float maxDuration = 4f;
+
+    [SerializeField]
+    private Damage damage;
+    [SerializeField]
+    private Knockback knockback;
 
 
     protected override void OnEnable () {
@@ -38,7 +44,7 @@ public sealed class Fireball : Spell {
 
                 float velocityFinal = velocity * speedMod;
                 Vector2 sizeFinal = size * sizeMod;
-                theFireball.Initialize (castDirX , CastPoint , ref velocityFinal , ref sizeFinal , ref maxDuration );
+                theFireball.Initialize (castDirX , CastPoint , ref velocityFinal , ref sizeFinal , ref damage , ref knockback , ref maxDuration );
             }
         }
     }
