@@ -20,6 +20,7 @@ public class Health : MonoBehaviour {
         CurrentHP = MaxHP;
     }
 
+
     public void LoseHP (int dmg) {
         CurrentHP -= Mathf.Abs(dmg);
         CheckDeath ();

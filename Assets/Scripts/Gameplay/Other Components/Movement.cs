@@ -44,6 +44,7 @@ public class Movement : MonoBehaviour {
         get { return velocity; }
         set { velocity = new Vector3 (value.x , value.y , 0); }
     }
+    public Vector2 VelocityMod;
 
     private Vector2 directionalInput; 
 
@@ -76,7 +77,14 @@ public class Movement : MonoBehaviour {
             velocity.y += Gravity * Time.deltaTime;
         }
 
-        controller.Move (velocity * Time.deltaTime);
+        Buffs[] buffs = GetComponentsInChildren<Buffs> ();
+
+        VelocityMod = velocity;
+        for (int i = 0 ; i < buffs.Length ; i++) {
+            buffs[i].MovementUpdate (ref VelocityMod);
+        }
+
+        controller.Move (VelocityMod * Time.deltaTime);
 
         if (controller.Collisions.above || controller.Collisions.below) {
             velocity.y = 0;

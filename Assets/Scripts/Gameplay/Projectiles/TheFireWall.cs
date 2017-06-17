@@ -47,11 +47,12 @@ public class TheFireWall : MonoBehaviour {
         }
     }
 
-    private void OnController2DTrigger ( Collider2D col ) { 
-        if (col.GetComponent<Enemy> () != null) {
+    private void OnController2DTrigger ( Collider2D col ) {
+        Enemy e = col.GetComponent<Enemy> ();
+        if (e != null) {
             if (!isColliderOnCD (col)) {
                 int pushDirX = ( col.bounds.center.x - collider.bounds.center.x > 0 ) ? 1 : -1;
-                damage.DealDamage (col);
+                damage.DealDamage (e);
                 knockback.Push (col, pushDirX);
                 trackCollidersCD.Add (new CollidersCD (col , tickTime));
             }

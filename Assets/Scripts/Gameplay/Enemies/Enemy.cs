@@ -34,6 +34,10 @@ public class Enemy : Actor {
         ai.StartCheckingAggro ();
     }
 
+    public void LoseHealth (int dmg) {
+        health.LoseHP (dmg);
+    }
+
     public override void Die () {
         //in the future this might be an animation.
         gameObject.SetActive (false);

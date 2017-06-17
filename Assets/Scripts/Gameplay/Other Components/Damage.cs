@@ -12,15 +12,13 @@ public class Damage {
     [SerializeField]
     private int baseAmount;
 
-    public void DealDamage (int damage, Collider2D target ) {
-        targetHP = target.GetComponent<Health> ();
-
+    public void DealDamage (int damage, Enemy target ) {
+        target.LoseHealth (damage);
         //damage type calculations go here
         Debug.LogFormat ("{0} took {1} damage." , target.name , damage);
-        targetHP.LoseHP (damage);
     }
 
-    public void DealDamage ( Collider2D target ) {
+    public void DealDamage ( Enemy target ) {
         DealDamage (baseAmount , target);
     }
 }

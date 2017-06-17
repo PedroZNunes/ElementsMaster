@@ -9,9 +9,13 @@ using System;
 public class TheFireball : Projectile {
 
     [SerializeField]
-    private Buffed buff;
+    private BuffedFireball buffedFireball;
+
+    [SerializeField]
+    private GameObject OnFirePrefab;
 
     private Knockback knockback;
+    
     private int dirX;
     private float speed;
 
@@ -77,16 +81,32 @@ public class TheFireball : Projectile {
             if (col.GetComponent<TheFireWall> () != null) {
                 TheFireWall theFireWall = col.GetComponent<TheFireWall> ();
                 Buff ();
-            } else if (col.CompareTag (MyTags.enemy.ToString ())) {
-                damage.DealDamage (col);
-                knockback.Push (col, dirX);
+            }
+            Enemy e = col.GetComponent<Enemy> ();
+            if (e != null) {
+                damage.DealDamage (e);
+                knockback.Push (col , dirX);
+                if (isBuffed) {
+                    SetOnFire (col.gameObject);
+                }
+
                 Explode ();
-            } else if (col.CompareTag (MyTags.block.ToString ())) {
+            } else if (col.GetComponent<Block> () != null) {
                 ColliderDistance2D colDist = col.Distance (collider);
                 Vector3 dist = ( colDist.pointB - colDist.pointA );
                 transform.position = transform.position - dist;
                 Explode ();
             }
+        }
+    }
+
+    private void SetOnFire ( GameObject target) {
+        OnFire onFire = target.GetComponentInChildren<OnFire> ();
+        if (onFire == null) {
+            Instantiate (OnFirePrefab , target.transform.position, Quaternion.identity , target.transform);
+        }
+        else {
+            onFire.Refresh ();
         }
     }
 
@@ -100,10 +120,10 @@ public class TheFireball : Projectile {
         if (!isBuffed) {
             isBuffed = true;
 
-            particles.transform.localScale = Vector3.one * buff.size;
+            particles.transform.localScale = Vector3.one * buffedFireball.size;
 
             ParticleSystem.ColorOverLifetimeModule colorModule = particles.colorOverLifetime;
-            ParticleSystem.MinMaxGradient gradient = new ParticleSystem.MinMaxGradient (buff.gradientMin , buff.gradientMax);
+            ParticleSystem.MinMaxGradient gradient = new ParticleSystem.MinMaxGradient (buffedFireball.gradientMin , buffedFireball.gradientMax);
             colorModule.color = gradient;
         }
     }
@@ -132,9 +152,10 @@ public class TheFireball : Projectile {
     }
 
     [Serializable]
-    private struct Buffed {
+    private struct BuffedFireball {
         public float size;
         public Color gradientMin;
         public Color gradientMax;
+        private Knockback knockback;
     }
 }

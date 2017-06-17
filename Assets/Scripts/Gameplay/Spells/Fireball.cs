@@ -20,6 +20,8 @@ public sealed class Fireball : Spell {
     private Damage damage;
     [SerializeField]
     private Knockback knockback;
+    [SerializeField]
+    private Knockback buffedKnockback;
 
 
     protected override void OnEnable () {
