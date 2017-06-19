@@ -28,9 +28,7 @@ public class TheFireWall : MonoBehaviour {
         this.damage = damage;
         this.knockback = knockback;
         //calculate damage. for now using just the base
-        Destroy (gameObject , maxDuration);
-        //StartCoroutine (DamageTicking ());
-        
+        Destroy (gameObject , maxDuration);     
     }
 
     private void Update () {

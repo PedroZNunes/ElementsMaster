@@ -11,13 +11,52 @@ public class Conflagrate : Spell {
      * ela faz isso atraves de o recebimento de um evento.
      * um evento que passa a posicao do creep em chamas. OnFire event
      */
-    public void Cast () {
-        /* quando castado ele busca numa area Radius ao redor do player.
-         * se ele achar algum inimigo ele procura nessa lista por inimigos pegando fogo.
-         * se tiver algum, colocamos nele o debuff de coflagrateDebuff
-         * no awake do coflagrate debuff o cara explode e soma o stack de fogo q ele tiver (como conflagration fire)
-         * ao de todos a uma area explosionRadius ao redor dele.
-         * conflagration fire n'ao pode ser `conflagrado.`
-        */
+    [SerializeField]
+    private LayerMask enemiesMask;
+
+    private bool isAvailable = false;
+
+    protected override void OnEnable () {
+        base.OnEnable ();
+        StartCoroutine (CheckOnFireEnemies ());
     }
+
+    public override void Cast () {
+        if (CanCast ()) {
+            foreach (OnFire onFire in FindObjectsOfType<OnFire>()) {
+                if (onFire == null) {
+                    continue;
+                }
+                onFire.Consume ();
+            }
+        }
+    }
+
+    protected override bool CanCast () {
+        if (isOnCooldown ()) {
+            Debug.LogFormat ("Spell on cooldown. {0:0.000}s" , currentCD);
+        }
+        else {
+            if (isAvailable) {
+                currentCD = baseCD;
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    private IEnumerator CheckOnFireEnemies () {
+        while (isActiveAndEnabled) {
+            OnFire onFire = FindObjectOfType<OnFire> (); ;
+            if (onFire != null) {
+                isAvailable = true;
+            }
+            else {
+                isAvailable = false;
+            }
+            yield return new WaitForSeconds (0.2f);
+        }
+    }
+
 }

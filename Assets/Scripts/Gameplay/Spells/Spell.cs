@@ -49,12 +49,13 @@ public class Spell : MonoBehaviour {
     /// </summary>
     /// <returns>true if the player can cast spells </returns>
     protected virtual bool CanCast () {
-        if (isOnCooldown ()) {
-            Debug.LogFormat ("Spell on cooldown. {0:0.000}s" , currentCD);
-            return false;
-        } else {
+        if (!isOnCooldown ()) {
             currentCD = baseCD;
             return true;
+        }
+        else {
+            Debug.LogFormat ("Spell on cooldown. {0:0.000}s" , currentCD);
+            return false;
         }
     }
 
@@ -130,5 +131,4 @@ public class Spell : MonoBehaviour {
             return null;
         }
     }
-
 }

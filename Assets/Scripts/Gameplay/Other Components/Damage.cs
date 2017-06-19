@@ -12,6 +12,8 @@ public class Damage {
     [SerializeField]
     private int baseAmount;
 
+    public int Amount { get { return baseAmount; } }
+
     public void DealDamage (int damage, Enemy target ) {
         target.LoseHealth (damage);
         //damage type calculations go here

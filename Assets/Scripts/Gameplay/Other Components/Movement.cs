@@ -44,6 +44,7 @@ public class Movement : MonoBehaviour {
         get { return velocity; }
         set { velocity = new Vector3 (value.x , value.y , 0); }
     }
+    [HideInInspector]
     public Vector2 VelocityMod;
 
     private Vector2 directionalInput; 

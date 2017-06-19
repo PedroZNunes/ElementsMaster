@@ -14,7 +14,7 @@ public class FireWall : Spell {
     [SerializeField]
     private float tickTime;
     [SerializeField]
-    private LayerMask layerMask;
+    private LayerMask obstaclesMask;
     [SerializeField]
     private Damage damage;
     [SerializeField]
@@ -32,7 +32,7 @@ public class FireWall : Spell {
         if (CanCast ()) {
             base.Cast ();
             //if there's an obstacle ahead, cast just before it.
-            RaycastHit2D hit = Physics2D.Raycast (transform.position , new Vector2 (castDirX , 0f), castOffset.x, layerMask);
+            RaycastHit2D hit = Physics2D.Raycast (transform.position , new Vector2 (castDirX , 0f), castOffset.x, obstaclesMask);
             if (hit) {
                 CastPoint = new Vector3 (transform.position.x + ( ( hit.distance - halfWidth ) * castDirX ) , CastPoint.y);
             }
