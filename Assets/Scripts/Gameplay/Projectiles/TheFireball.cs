@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System;
+using Random = UnityEngine.Random;
 
 /// <summary>
 /// component to be attached to the fireball instance
@@ -25,8 +26,21 @@ public class TheFireball : Projectile {
 
     [SerializeField]
     private ParticleSystem particles;
+
     [SerializeField]
     private ParticleSystem particlesExplosion;
+    
+    [SerializeField]
+    private AudioClip explosionSound;
+    [SerializeField]
+    private AudioClip awakeSound;
+    [SerializeField]
+    private float pitchOffsetRange;
+    private float pitchBase = 1;
+    [SerializeField]
+    private AudioSource awakeAudioSource;
+    [SerializeField]
+    private AudioSource explosionAudioSource;
 
     private Controller2D controller;
     private BoxCollider2D collider;
@@ -68,6 +82,10 @@ public class TheFireball : Projectile {
 
         ParticleSystem.ColorOverLifetimeModule colorModule = particles.colorOverLifetime;
         colorModule.color = defaultGradient;
+
+        awakeAudioSource.clip = awakeSound;
+        awakeAudioSource.pitch = Random.Range (pitchBase - pitchOffsetRange , pitchBase + pitchOffsetRange);
+        awakeAudioSource.Play ();
 
         StartCoroutine (Die (maxDuration)); //TODO: projectiles object pool for memory fragmentation
     }
@@ -131,8 +149,14 @@ public class TheFireball : Projectile {
     private void Explode () {
         collider.enabled = false; 
         particles.Stop ();
-        
+
+        explosionAudioSource.pitch = Random.Range (pitchBase - pitchOffsetRange , pitchBase + pitchOffsetRange);
+
         particlesExplosion.gameObject.SetActive (true);
+
+        //audioSource.clip = explosionSound;
+        //audioSource.Play ();
+
         StartCoroutine (Die (particlesExplosion.main.startLifetime.constantMax));
     }
 
