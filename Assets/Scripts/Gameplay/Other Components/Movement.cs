@@ -51,6 +51,11 @@ public class Movement : MonoBehaviour {
 
     public int DirX { get { return controller.Collisions.movementDirX; } }
 
+    [SerializeField]
+    private AudioSource audioSource;
+    private float pitchOffsetRange = 0.15f;
+    private float pitchBase = 1;
+
     /// <summary>
     /// if bound to the player, calculates the gravity
     /// </summary>
@@ -139,6 +144,11 @@ public class Movement : MonoBehaviour {
         }
         else {
             if (isWallSliding) {
+                if (audioSource != null) {
+                    audioSource.pitch = Random.Range (pitchBase - pitchOffsetRange , pitchBase + pitchOffsetRange);
+                    audioSource.Play ();
+                }
+
                 if (wallDirX == directionalInput.x) { //Climbing
                     velocity.x = -wallDirX * wall.climb.x;
                     velocity.y = wall.climb.y;
@@ -154,9 +164,14 @@ public class Movement : MonoBehaviour {
             }
             else if (controller.Collisions.below) {
                 velocity.y = jump.velocityMax;
+
+                if (audioSource != null) {
+                    audioSource.pitch = Random.Range (pitchBase - pitchOffsetRange , pitchBase + pitchOffsetRange);
+                    audioSource.Play ();
+                }
                 //StartCoroutine (TrackHeightAndLength ());
             }
-        }
+        } 
     }
 
     public void HandleJump (float jumpVelocity ) {
@@ -166,7 +181,13 @@ public class Movement : MonoBehaviour {
 
         if (controller.Collisions.below) {
             velocity.y = jumpVelocity;
+            if (audioSource != null && jumpVelocity >= JumpVelocityMin) {
+                audioSource.pitch = Random.Range (pitchBase - pitchOffsetRange , pitchBase + pitchOffsetRange);
+                audioSource.Play ();
+            }
         }
+
+        
     }
 
     public void HandleCancelJump () {
