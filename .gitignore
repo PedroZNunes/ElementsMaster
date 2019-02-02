@@ -10,6 +10,7 @@
 /Raw
 /Packages
 /Logs
+/.vs
 
 /*.sln
 /Assembly-CSharp.csproj
