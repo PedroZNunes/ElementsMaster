@@ -63,24 +63,36 @@ public class PlayerInput : MonoBehaviour {
 
     private void CheckPause () {
         if (Input.GetButtonDown ("Cancel")) {
-            if (PressPauseEvent != null) {
-                PressPauseEvent ();
-            }
+                PressPauseEvent?.Invoke();
         }
     }
 
     private void CheckActions () {
-        if (Input.GetButtonDown ("Fire1")) {
-            mastery.Spell1 ();
+        if (Input.GetButtonDown("Fire1")) {
+            mastery.Spell1();
         }
-        else if (Input.GetButtonDown ("Fire2")) {
-            mastery.Spell2 ();
+        else if (Input.GetButtonDown("Fire2")) {
+            mastery.Spell2();
         }
-        else if (Input.GetButtonDown ("Fire3")) {
-            mastery.Spell3 ();
+        else if (Input.GetButtonDown("Fire3")) {
+            mastery.Spell3();
         }
-        else if (Input.GetButtonDown ("Fire4")) {
-            mastery.Spell4 ();
+        else if (Input.GetButtonDown("Fire4")) {
+            mastery.Spell4();
         }
+
+        //MASTER COMMANDS
+        else if (Input.GetButtonDown("SpawnBot")) {
+            //TODO: Spawns a bot where you are
+        }
+        else if(Input.GetButtonDown("StopAllBots"))
+        {
+            //TODO: Stops all bots
+        }
+        else if (Input.GetButtonDown("MoveAllBots"))
+        {
+            //TODO: Allows bot movement
+        }
+
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+//On Fire is the debuff a creature gets from certain spells. 
 public class OnFire : Buffs {
 
     [SerializeField]
@@ -14,24 +14,9 @@ public class OnFire : Buffs {
     private Coroutine dealDamageCoroutine;
 
     [SerializeField]
-    private AudioClip consumeSound;
-    [SerializeField]
     private ParticleSystem explosionParticles;
     [SerializeField]
     private ParticleSystem fireParticles;
-
-    [SerializeField]
-    private float pitchOffsetRange;
-    private float pitchBase = 1;
-
-    private AudioSource audioSource;
-
-    private void Awake () {
-        audioSource = GetComponent<AudioSource> ();
-
-        target = GetComponentInParent<Enemy> ();
-        target.OnDeath += OnTargetDeath;
-    }
 
     private void OnEnable () {
         Refresh ();
@@ -40,14 +25,12 @@ public class OnFire : Buffs {
     // Update is called once per frame
     private void Update () {
         if (currentDuration <= 0f) {
-            target.OnDeath -= OnTargetDeath;
             Destroy (gameObject);
         }
         currentDuration -= Time.deltaTime;
     }
 
-    private void OnTargetDeath () {
-        target.OnDeath -= OnTargetDeath;
+    private void OnDisable () {
         Destroy (gameObject);
     }
 
@@ -56,6 +39,7 @@ public class OnFire : Buffs {
     }
 
     public void Refresh () {
+        target = GetComponentInParent<Enemy> ();
         currentDuration = this.duration;
 
         if (dealDamageCoroutine == null) {
@@ -64,13 +48,13 @@ public class OnFire : Buffs {
     }
 
     public IEnumerator DealDamage (Enemy target) {
-        WaitForSeconds wfs = new WaitForSeconds (interval);
         while (gameObject.activeInHierarchy) {
             damage.DealDamage (target);
-            yield return wfs;
+            yield return new WaitForSeconds (interval);
         }
     }
 
+    //TODO: could this be a ConsumeAll under coflagrate? Coflagrate.ConsumeAll() sounds better than Onfire.Consume();
     public void Consume () {
         transform.SetParent (transform.parent.parent);
 
@@ -83,10 +67,6 @@ public class OnFire : Buffs {
         if (dealDamageCoroutine != null) {
             StopCoroutine (dealDamageCoroutine);
         }
-
-        audioSource.clip = consumeSound;
-        audioSource.loop = false;
-        audioSource.Play ();
 
         fireParticles.Stop ();
 

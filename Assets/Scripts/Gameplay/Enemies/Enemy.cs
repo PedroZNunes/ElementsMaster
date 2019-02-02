@@ -6,8 +6,6 @@ using UnityEngine;
 [RequireComponent (typeof (Movement), typeof (EnemyAI), typeof (Health))]
 public class Enemy : Actor {
 
-    public event Action OnDeath;
-
     [HideInInspector]
     public Movement movement;
     private Health health;
@@ -42,11 +40,7 @@ public class Enemy : Actor {
 
     public override void Die () {
         //in the future this might be an animation.
-        if (OnDeath != null) {
-            OnDeath ();
-        }
-
-        ai.StopCheckingAggro ();
         gameObject.SetActive (false);
+        ai.StopCheckingAggro ();
     }
 }

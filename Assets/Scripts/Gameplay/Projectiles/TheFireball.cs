@@ -1,13 +1,21 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System;
-using Random = UnityEngine.Random;
 
 /// <summary>
 /// component to be attached to the fireball instance
 /// </summary>
 [RequireComponent(typeof (Controller2D))]
 public class TheFireball : Projectile {
+
+    [Serializable]
+    private struct BuffedFireball
+    {
+        public float size;
+        public Color gradientMin;
+        public Color gradientMax;
+        private Knockback knockback;
+    }
 
     [SerializeField]
     private BuffedFireball buffedFireball;
@@ -26,26 +34,15 @@ public class TheFireball : Projectile {
 
     [SerializeField]
     private ParticleSystem particles;
-
     [SerializeField]
     private ParticleSystem particlesExplosion;
-    
-    [SerializeField]
-    private AudioClip explosionSound;
-    [SerializeField]
-    private AudioClip awakeSound;
-    [SerializeField]
-    private float pitchOffsetRange;
-    private float pitchBase = 1;
-    [SerializeField]
-    private AudioSource awakeAudioSource;
-    [SerializeField]
-    private AudioSource explosionAudioSource;
 
     private Controller2D controller;
     private BoxCollider2D collider;
 
     private ParticleSystem.MinMaxGradient defaultGradient;
+
+
 
     /// <summary>
     /// initialize the component, ensuring that the reuse of it (from the pool) won't be affected by the previous lifetime
@@ -83,10 +80,6 @@ public class TheFireball : Projectile {
         ParticleSystem.ColorOverLifetimeModule colorModule = particles.colorOverLifetime;
         colorModule.color = defaultGradient;
 
-        awakeAudioSource.clip = awakeSound;
-        awakeAudioSource.pitch = Random.Range (pitchBase - pitchOffsetRange , pitchBase + pitchOffsetRange);
-        awakeAudioSource.Play ();
-
         StartCoroutine (Die (maxDuration)); //TODO: projectiles object pool for memory fragmentation
     }
 
@@ -96,6 +89,7 @@ public class TheFireball : Projectile {
 
     private void OnController2DTrigger ( Collider2D col ) {
         if (collider.enabled) {
+            //if the fireball meets the firewall
             if (col.GetComponent<TheFireWall> () != null) {
                 TheFireWall theFireWall = col.GetComponent<TheFireWall> ();
                 Buff ();
@@ -105,11 +99,12 @@ public class TheFireball : Projectile {
                 damage.DealDamage (e);
                 knockback.Push (col , dirX);
                 if (isBuffed) {
-                    SetOnFire (col.gameObject);
+                    SetOnFire (col.gameObject); //TODO: the fireball should just deal a bit more damage and pushback
                 }
 
                 Explode ();
             } else if (col.GetComponent<Block> () != null) {
+                //relocates the transform to the edge of the block and explodes
                 ColliderDistance2D colDist = col.Distance (collider);
                 Vector3 dist = ( colDist.pointB - colDist.pointA );
                 transform.position = transform.position - dist;
@@ -131,7 +126,6 @@ public class TheFireball : Projectile {
     private void ResetBuff () {
         isBuffed = false;
         particles.transform.localScale = Vector3.one;
-        
     }
 
     private void Buff () {
@@ -149,14 +143,8 @@ public class TheFireball : Projectile {
     private void Explode () {
         collider.enabled = false; 
         particles.Stop ();
-
-        explosionAudioSource.pitch = Random.Range (pitchBase - pitchOffsetRange , pitchBase + pitchOffsetRange);
-
+        
         particlesExplosion.gameObject.SetActive (true);
-
-        //audioSource.clip = explosionSound;
-        //audioSource.Play ();
-
         StartCoroutine (Die (particlesExplosion.main.startLifetime.constantMax));
     }
 
@@ -175,11 +163,5 @@ public class TheFireball : Projectile {
         gameObject.SetActive (false);
     }
 
-    [Serializable]
-    private struct BuffedFireball {
-        public float size;
-        public Color gradientMin;
-        public Color gradientMax;
-        private Knockback knockback;
-    }
+
 }

@@ -28,7 +28,7 @@ public class Firemage : Mastery {
     public override void Spell2 () {
         if (inGlobalCD ()) { return; }
         globalCD += spells.fireDash.GlobalCD;
-        //TODO: if you hit and enemy, you gain refill (up to three dashes in a row). but first we need enemies.
+        //TODO: if you hit an enemy, you gain refill (up to three dashes in a row). but first we need enemies. edit: we have enemies now!
         spells.fireDash.Cast ( );
     }
 

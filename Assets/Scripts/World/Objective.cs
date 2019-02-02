@@ -20,10 +20,7 @@ public class Objective : MonoBehaviour {
         }
     }
 
-    private AudioSource audioSource;
-
     private void Awake () {
-        audioSource = GetComponent<AudioSource> ();
         collider = GetComponent<Collider2D> ();
     }
 
@@ -46,8 +43,7 @@ public class Objective : MonoBehaviour {
         if (OnTriggered != null) {
             OnTriggered (this);
         }
-        audioSource.Play ();
-
+        
         collider.enabled = isEnabled = false;
         IsTriggered = true;
         Debug.Log ("Player triggered the " + name);
